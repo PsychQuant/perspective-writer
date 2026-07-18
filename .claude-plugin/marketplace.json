@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "perspective-writer",
+  "description": "Authentic-voice writing marketplace: letters, emails, autobiographies, and formal documents written by simulating the writer's voice and the recipient's context. Tarski T-Schema referent discipline (every sentence points to something concrete and verifiable), role calibration per expertise domain, and a feedback-learning loop that persists style rules across sessions.",
+  "owner": {
+    "name": "Che Cheng",
+    "email": "che@example.com"
+  },
+  "homepage": "https://github.com/PsychQuant/perspective-writer",
+  "plugins": [
+    {
+      "name": "perspective-writer",
+      "version": "2.10.0",
+      "description": "Write letters, emails, autobiographies, and formal documents by simulating the writer's authentic voice. Uses Tarski's T-Schema to ensure every sentence has a concrete referent, and a 6-phase process (understand writer, understand recipient, simulate, write, anti-pattern check, iterate) to produce writing that sounds like a real person, not AI.",
+      "author": {
+        "name": "Che Cheng"
+      },
+      "source": "./plugins/perspective-writer",
+      "category": "productivity"
+    }
+  ]
+}
