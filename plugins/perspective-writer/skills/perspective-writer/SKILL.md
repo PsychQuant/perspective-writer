@@ -402,6 +402,32 @@ This heuristic applies not just to `---` in markdown but to **every CSS border d
 when generating HTML/PDF drafts (DMs, proposals, reports). Count rendered horizontal lines
 per page; pairs with nothing meaningful between them are the AI tell to fix.
 
+## Calibrate-draft entry (EXTERNAL-CONSUMER CONTRACT, 2.11.0+, #1)
+
+When the invocation args contain a `CALIBRATE-DRAFT REQUEST` block, you were invoked
+programmatically by another plugin (first consumer: issue-driven-dev's
+`idd-comment --type=reply`) to calibrate an **already-anchored draft**, not to
+compose from scratch. The full consumer-facing contract lives in the repo
+README's "EXTERNAL-CONSUMER CONTRACT" section; the phase mapping is:
+
+- **Phase 1 is SKIPPED** — the writer's voice context arrives with the request
+  (or the consumer's repo rules); do not interview.
+- **Phase 2 is fed by `recipient-rules`** — read the provided
+  `.claude/rules/correspondence-<person>.md` path when present. Absent → use a
+  conservative generic register and NOTE in the returned draft's leading line
+  comment that person-level calibration did not run — never guess intimacy.
+- **Phase 4 starts from the provided draft** — this is a Revise pass over the
+  consumer's text, not a Compose pass.
+- **Frozen anchors are immutable (HARD RULE)** — the request's `frozen-anchors`
+  (verbatim blockquotes, commit SHAs / PR refs, file / theorem / symbol
+  references) SHALL survive byte-identical. Calibrate tone, register, and
+  connective prose only. The Fabrication Trap rules apply unchanged: never add
+  a claim the draft did not carry.
+- **Phase 5 anti-pattern check runs as usual**; Phase 6/6b/7 are SKIPPED —
+  single pass, unattended-friendly.
+- **Return shape**: your final message is the calibrated draft text itself —
+  full body, no wrapper narration, no file edits.
+
 ## Phase 6: Present and Iterate
 
 Show the draft to the user. Don't just dump it. Explain:
