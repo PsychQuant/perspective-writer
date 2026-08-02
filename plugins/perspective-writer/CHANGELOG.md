@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.11.0] - 2026-07-19
+
+### Added
+
+- **EXTERNAL-CONSUMER CONTRACT (STABLE) — programmatic calibrate-draft entry (#1)** — other plugins can now invoke `perspective-writer:perspective-writer` with a structured `CALIBRATE-DRAFT REQUEST` block to calibrate an already-anchored draft for a human recipient (first consumer: issue-driven-dev `idd-comment --type=reply`, soft integration with graceful degrade). Contract single source = README "EXTERNAL-CONSUMER CONTRACT" section; consumers pin `MIN_PW_CONTRACT=2.11.0`. Phase mapping: Phase 1 skipped (no interview), Phase 2 fed by the consumer's `recipient-rules` path (absent → conservative generic register + explicit note), Phase 4 runs as a Revise pass over the provided draft, Phase 5 anti-pattern check unchanged, Phases 6/6b/7 skipped (single pass, unattended-friendly). HARD RULE: `frozen-anchors` (verbatim blockquotes, commit SHAs / PR refs, file / theorem / symbol references) survive byte-identical — calibration touches tone, register, and connective prose only, and never adds claims (Fabrication Trap rules unchanged). Return shape: the final message is the calibrated draft text itself — no wrapper narration, no file edits.
+
 ## [2.10.0] - 2026-07-18
 
 ### Changed
