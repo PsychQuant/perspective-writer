@@ -60,12 +60,24 @@ DRAFT>>>
    |---|---|
    | `subject-specific` | the subject's core was found at the current location |
    | `legacy` | resolution succeeded through the legacy path or a redirect placeholder |
-   | `generic` | no subject rules were found at either location |
+   | `generic` | no subject rules were found at any source the resolution order consults |
 
-   The return header carries `status=person` for the first two and `status=generic` for the third. **Recipient fallback**: `recipient-rules` absent, or a location that resolves to nothing → calibrate to a conservative generic register and mark `status=generic`. The skill never guesses intimacy. Consumers SHOULD surface a `generic` return to their user rather than treating it as success — an uncalibrated draft reads fine and is not distinguishable from a calibrated one by inspection.
-4. **Frozen anchors — normative obligation + REQUIRED consumer verification.** The skill SHALL reproduce every listed span character-identical (same Unicode code-point sequence). This is a prose-model obligation, **not a mechanically enforceable guarantee** — therefore the consumer SHALL verify after return (every listed anchor still present, occurrence count preserved) and on any mismatch SHALL fall back to its own uncalibrated draft (graceful degrade). A consumer that skips verification has no integrity guarantee.
-5. **Return shape**: line 1 is a status header `<!-- pw:calibrate v1 status=person -->` or `<!-- pw:calibrate v1 status=generic -->` (an HTML comment — machine-readable, and invisible on GitHub even if posted un-stripped); everything after it is the calibrated draft text, nothing else — no wrapper narration, no file edits.
-6. **No new claims**: calibration never adds factual claims the draft did not carry (Fabrication Trap rules unchanged).
+   The return header carries `status=person` for the first two and `status=generic` for the third. **Recipient fallback**: `recipient-rules` absent, or a location that resolves to nothing → calibrate to a conservative generic register and mark `status=generic`. The skill never guesses intimacy.
+
+4. **Consumers SHALL read the status header.** This is an obligation in its own right, not an implication of the disclosure obligation below — a consumer that never reads the header cannot disclose anything, and would otherwise have no stated requirement it visibly fails.
+
+5. **Consumers SHALL disclose a degraded outcome.** When the status is `generic`, the consumer SHALL tell its user that subject-specific rules were not applied, and SHALL NOT present the result as fully calibrated. **Apparent draft quality is not evidence that calibration occurred**: a generic-register draft reads fine and is not distinguishable from a calibrated one by inspection. That is precisely why the status header is the only signal, and why consuming it is required rather than recommended.
+
+   Conditions that produce `status=generic` — the authority is the *Outcome statuses* section of [`plugins/perspective-writer/references/rules-resolution.md`](plugins/perspective-writer/references/rules-resolution.md); this list points at it rather than restating the semantics, so the two cannot drift as the resolution order gains sources:
+
+   | Condition | What the consumer can suggest to its user |
+   |---|---|
+   | `recipient-rules` absent from the request | the caller did not supply a location |
+   | the supplied location resolves to nothing | the location may be stale or mistyped |
+   | no subject rules found at any source the resolution order consults | this subject has no rules on file yet |
+6. **Frozen anchors — normative obligation + REQUIRED consumer verification.** The skill SHALL reproduce every listed span character-identical (same Unicode code-point sequence). This is a prose-model obligation, **not a mechanically enforceable guarantee** — therefore the consumer SHALL verify after return (every listed anchor still present, occurrence count preserved) and on any mismatch SHALL fall back to its own uncalibrated draft (graceful degrade). A consumer that skips verification has no integrity guarantee.
+7. **Return shape**: line 1 is a status header `<!-- pw:calibrate v1 status=person -->` or `<!-- pw:calibrate v1 status=generic -->` (an HTML comment — machine-readable, and invisible on GitHub even if posted un-stripped); everything after it is the calibrated draft text, nothing else — no wrapper narration, no file edits.
+8. **No new claims**: calibration never adds factual claims the draft did not carry (Fabrication Trap rules unchanged).
 
 Contract changes bump this section + a CHANGELOG entry; the floor is the cache version per the semver-aware comparison above.
 

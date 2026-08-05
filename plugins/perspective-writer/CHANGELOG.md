@@ -11,6 +11,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-08-05
+
+### Changed
+
+- **Consumer degradation-disclosure obligations raised from SHOULD to SHALL.** The
+  contract defined a degradation signal (`status=generic`) and then left consuming it
+  optional. For a failure whose output looks normal — a generic-register draft reads
+  fine and is not distinguishable from a calibrated one by inspection — SHOULD reads as
+  permission to skip, and a signal nobody is required to consume has defined nothing.
+- Reading the status header is now stated as an obligation in its own right, not as an
+  implication of the disclosure clause. A consumer that never reads the header cannot
+  disclose anything and would otherwise have no stated requirement it visibly fails.
+
+### Added
+
+- The conditions that produce `status=generic` are now enumerated in the consumer
+  contract, so a consumer can turn its disclosure into an actionable message rather than
+  a generic warning. The list **points at** the *Outcome statuses* section of
+  `references/rules-resolution.md` rather than restating the semantics, so the two cannot
+  drift as the resolution order gains sources.
+
+### Notes
+
+- **No existing consumer breaks.** A consumer that does not read the status header keeps
+  working exactly as before; it is merely now out of compliance. The change alters the
+  normative basis, not any observed behavior — hence a minor bump, not a major one.
+- Downstream implementation of the disclosure is tracked in the consumer's own
+  repository, not here. This release supplies the normative backing that request cites.
+
+
 ## [3.0.0] - 2026-08-05
 
 ### Changed
