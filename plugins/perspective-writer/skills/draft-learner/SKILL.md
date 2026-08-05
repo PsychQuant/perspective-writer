@@ -2,7 +2,7 @@
 name: draft-learner
 description: >
   Auto-learn from user edits to draft files. When a system-reminder shows a draft was modified,
-  diff the changes, extract concrete rules, and update .claude/rules/ files. Trigger when you
+  diff the changes, extract concrete rules, and persist them to the right rules location. Trigger when you
   detect a file modification system-reminder on a file you recently wrote or edited.
 argument-hint: (auto-triggered from file modification)
 allowed-tools: Read, Edit, Write, Grep, Glob, TaskCreate, TaskUpdate, TaskList
@@ -19,7 +19,7 @@ You have been triggered because a file you recently wrote or edited in this conv
 ```
 TaskCreate(name="step1_detect_and_diff",     description="Step 1: 讀修改後的檔案，對照原版，把每個改動分類")
 TaskCreate(name="step2_extract_rules",       description="Step 2: 把每個改動轉成具體、可重用的 rule（一改動一 rule）")
-TaskCreate(name="step3_locate_rules_file",   description="Step 3: Glob 找 .claude/rules/ 現有檔案；沒有就詢問是否建立")
+TaskCreate(name="step3_locate_rules_file",   description="Step 3: 依 Split criterion by reader 決定去向；本 plugin 讀的走 persist，其餘留 injected rules 目錄")
 TaskCreate(name="step4_update_rules",        description="Step 4: Edit 現有檔案（不覆寫、不重複、矛盾就取代）或 Write 新檔")
 TaskCreate(name="step5_confirm_with_user",   description="Step 5: 給 user 簡短摘要說學到什麼、存到哪")
 ```
@@ -70,22 +70,37 @@ If the reason behind a change is inferable, include it parenthetically:
 
 ## Step 3: Find or Create Rules File
 
-Use `Grep` and `Glob` to check if a relevant `.claude/rules/` file already exists in the project.
+Where a rule goes depends on **who reads it** — see the *Split criterion by reader*
+section of [`references/rules-resolution.md`](../../references/rules-resolution.md).
+A rule this plugin reads goes through the **persist** operation. A rule no skill
+reads stays in the injected project rules directory, because injection is its only
+delivery mechanism.
 
-### File naming conventions:
-| Draft type | Rules file pattern |
-|------------|-------------------|
-| Correspondence to a person | `.claude/rules/correspondence-[recipient-name].md` |
-| Reports / documents | `.claude/rules/[document-type]-style.md` |
-| Code comments / docs | `.claude/rules/code-writing-style.md` |
-| General writing | `.claude/rules/writing-style.md` |
+### Routing by draft type:
+| Draft type | Read by a skill in this plugin | Where it goes |
+|------------|:---:|---------------|
+| Correspondence to a person | yes | **persist** — subject's core or facet |
+| Reports / documents | yes | **persist** — genre convention, or the subject's facet if party-specific |
+| Code comments / docs | no | `.claude/rules/code-writing-style.md` (unchanged) |
+| General writing | no | `.claude/rules/writing-style.md` (unchanged) |
+
+**Do not move the bottom two rows into the plugin namespace.** No skill here reads
+them; they work by being injected into general session context. Moving them removes
+their only reader — silently, with no error and no attributable change in output.
+When you are unsure which side a new rule category falls on, leave it in the
+injected directory: that failure mode is the visible one.
+
+For the top two rows, do not assemble a path. Name the **persist** operation and
+cite the contract's *Named resolution contract* and *Storage layout* sections.
+A rule that holds across genres for that subject belongs in the subject's core;
+a rule specific to this draft's genre belongs in that genre's facet.
 
 ### If the file exists:
 1. **Read it first** using the `Read` tool.
 2. Proceed to Step 4 (update).
 
 ### If the file does NOT exist:
-1. Ask the user: "我偵測到你對草稿做了修改。要不要建立 `.claude/rules/[suggested-name].md` 來記住這些偏好？"
+1. Ask the user: "我偵測到你對草稿做了修改。要不要把這些偏好記下來？"（一併說出 routing 決定的目標位置）
 2. If the user agrees, create it with a header and the extracted rules.
 3. If the user declines, still show the summary (Step 5) but do not persist.
 
@@ -110,7 +125,7 @@ After updating (or deciding not to), show a short summary:
 2. [concrete change 2]
 3. [concrete change 3]
 
-已更新 `.claude/rules/[filename]`，你隨時可以打開修改。
+已更新 [實際寫入的路徑]，你隨時可以打開修改。
 ```
 
 If the user declined to create a rules file:

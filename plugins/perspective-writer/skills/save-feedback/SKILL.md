@@ -11,7 +11,7 @@ allowed-tools: Read, Edit, Write, Grep, Glob, TaskCreate, TaskUpdate, TaskList
 
 # Save Feedback
 
-You have been triggered to capture **conversational feedback** that the user gave during a drafting session — feedback that did **not** result in a file modification (so draft-learner never ran). Your job is to scan recent conversation, extract concrete style/tone/relationship/structure rules, and persist them to `.claude/rules/`.
+You have been triggered to capture **conversational feedback** that the user gave during a drafting session — feedback that did **not** result in a file modification (so draft-learner never ran). Your job is to scan recent conversation, extract concrete style/tone/relationship/structure rules, and persist them via the **persist** operation defined in [`references/rules-resolution.md`](../../references/rules-resolution.md).
 
 ## Why this skill exists (separate from draft-learner)
 
@@ -32,7 +32,7 @@ When the user gives verbal feedback and the agent rewrites the file each round, 
 TaskCreate(name="step1_scan_conversation",  description="Step 1: 掃 recent 對話,找出 user 給的 style/tone/relationship/structure feedback")
 TaskCreate(name="step2_classify_feedback",  description="Step 2: 把每條 feedback 分類 (tone / relationship / structure / cultural / rejection-reason)")
 TaskCreate(name="step3_extract_rules",      description="Step 3: 把每條 feedback 轉成具體可重用的 rule (一條 feedback 一個 rule)")
-TaskCreate(name="step4_locate_rules_file",  description="Step 4: Glob 找 .claude/rules/ 現有檔;沒有就建議 path")
+TaskCreate(name="step4_locate_rules_file",  description="Step 4: 依 Split criterion by reader 決定去向；本 plugin 讀的走 persist，其餘留 injected rules 目錄")
 TaskCreate(name="step5_write_rules",        description="Step 5: Edit 既有檔(避免重複)或 Write 新檔")
 TaskCreate(name="step6_confirm_with_user",  description="Step 6: 給 user 簡短摘要 (學到 N 條,存到哪)")
 ```
@@ -92,7 +92,7 @@ Skip pure factual corrections (「這個日期錯了」/「拼字錯」)— 那�
 ## Step 4: Locate Rules File
 
 ```bash
-ls .claude/rules/*.md 2>/dev/null
+resolve(subject, genre) — 見 references/rules-resolution.md 的 *Resolution order*；不要列目錄
 ```
 
 ### 命名慣例
@@ -134,7 +134,7 @@ ls .claude/rules/*.md 2>/dev/null
 簡短回報:
 
 ```
-✓ 從對話擷取 N 條 feedback,存到 .claude/rules/recipient-tatsuma.md:
+✓ 從對話擷取 N 條 feedback,存到 [persist 回傳的路徑]:
   - tone: 3 條 (緩衝句 / です ます / 避免 directive)
   - structure: 1 條 (APA-like 段落順序)
   - anti-patterns: 2 條 (破折號 / bullet)
@@ -165,7 +165,7 @@ ls .claude/rules/*.md 2>/dev/null
 | Trigger | file-modification system-reminder | explicit invocation |
 | Source | file diff | conversation history |
 | Scope | per-file change | per-session feedback |
-| Output | rules in `.claude/rules/` | rules in `.claude/rules/` |
+| Output | via **persist** (see rules-resolution.md) | via **persist** (see rules-resolution.md) |
 | Run order | automatic | manual / proactive suggestion |
 
 兩個 skill **互補**,可同時跑。draft-learner 抓 file edit 的明顯改動,save-feedback 抓對話裡 user 沒動手只口頭說的偏好。

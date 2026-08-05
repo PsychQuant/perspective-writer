@@ -130,13 +130,14 @@ This skill runs in one of two modes. Identify which one before Phase 0:
 **在動任何事之前**先用 `TaskCreate` 為這個 stage 建 todo list，確保 7 個 phase 都有被追蹤：
 
 ```
+TaskCreate(name="phase0_resolve_rules",            description="Phase 0: 對本次的 subject + genre 執行 resolve 並記下 outcome status（見 references/rules-resolution.md 的 Load gate）。未執行 resolve 不得起草")
 TaskCreate(name="phase1_understand_writer",        description="Phase 1: 讀 user 材料（含與收件人的往來歸檔原文）建立 voice model + 問情緒狀態")
 TaskCreate(name="phase2_understand_recipient",     description="Phase 2: 讀與收件人的真實往來原文 + 研究背景、power dynamic、cultural context")
 TaskCreate(name="phase3_simulate",                 description="Phase 3: 寫出 simulation 段落再開始 draft")
 TaskCreate(name="phase4_write_draft",              description="Phase 4: 初稿（Lead with WHY、Voice matching、Pressure calibration）")
 TaskCreate(name="phase5_antipatterns_check",       description="Phase 5+5b: 過 anti-pattern checklist、用 horizontal rule 包裹輸出")
 TaskCreate(name="phase6_present_and_iterate",      description="Phase 6: 呈現草稿並解釋選擇，等 user 回饋；若編輯檔案 → delegate draft-learner (6b)")
-TaskCreate(name="phase7_persist_rules",            description="Phase 7: 徵詢後把通信習慣寫到 .claude/rules/correspondence-[recipient].md")
+TaskCreate(name="phase7_persist_rules",            description="Phase 7: 徵詢後執行 persist 操作（見 references/rules-resolution.md 的 Named resolution contract）")
 ```
 
 完成每一個 phase 立即 `TaskUpdate → completed`。**靜默完成 = 違規**。
@@ -144,6 +145,35 @@ TaskCreate(name="phase7_persist_rules",            description="Phase 7: 徵詢�
 **為什麼強制**：Phase 1-3 是「理解」階段，很容易被跳過直接 Phase 4 寫 draft。強制 TaskList 讓 skip 變得明顯。另外 Phase 7（persist rules）常被忘記，TaskList 收尾時就會提醒還沒做。
 
 **注意**：Phase 5b 是 output format 的格式規範（用 `---` 不用 `>`），併進 `phase5_antipatterns_check`；Phase 6b 是偵測到檔案被改動時 delegate 到 `draft-learner` skill，不算獨立 phase，處理完回到 `phase6_present_and_iterate`。
+
+---
+
+## Phase 0b: Resolve the Subject's Rules (load gate)
+
+Before anything else, perform the **resolve** operation for this document's subject
+and genre, and record the outcome status. The operation, the storage layout, and the
+resolution order are defined in [`references/rules-resolution.md`](../../references/rules-resolution.md)
+— cite it; do not assemble a path here.
+
+**Drafting without a recorded resolution outcome is refused.** If you reach Phase 4
+and no outcome is recorded, stop and say which lookup was not performed. The gate is
+conditioned on the lookup having run, not on a rules file existing — see the
+*Load gate* section of the contract for why.
+
+Then act on the status (*Outcome statuses* in the contract):
+
+| Status | What you do |
+|--------|-------------|
+| `subject-specific` | Read the returned files in the returned order. No disclosure needed. |
+| `legacy` | Read them, **name the location that supplied them**, and offer migration. |
+| `generic` | Proceed, but **state that this subject has no existing rules** before presenting any draft. |
+
+Both disclosures are obligations, not courtesies. A draft produced without the
+subject's rules can read perfectly well and still not sound like the writer — that is
+exactly why the absence has to be stated rather than left for the user to notice.
+
+A `generic` outcome does **not** trigger refusal. Writing to someone for the first
+time is a normal path, not a failure.
 
 ---
 
@@ -422,10 +452,14 @@ there is no human to interview mid-pass.
 - **Phase 0 bootstrap does NOT apply** (single programmatic pass — no stage
   task list); Phases 5b / 6 / 6b / 7 do not apply either.
 - **Phase 1 is SKIPPED** — do not interview.
-- **Phase 2 is fed by `recipient-rules`** — read the provided path when
-  present and readable. Absent field, or present-but-unreadable path → the
-  SAME fallback: a conservative generic register, and the return header says
-  `status=generic`. Never guess intimacy.
+- **Phase 2 is fed by `recipient-rules`** — treat the provided value as a
+  *resolved location* and read it through the **resolve** operation, so a
+  redirect placeholder at a legacy path is followed (see the contract's
+  *Redirect placeholder is followed once*). Absent field, or a location that
+  resolves to nothing → the SAME fallback: a conservative generic register, and
+  the return header says `status=generic`. Never guess intimacy.
+- **Phase 0b does not apply** — there is no human to disclose to and no drafting
+  decision to gate; the `status=` header carries the outcome to the consumer instead.
 - **Phase 3 runs internally** — simulate the writer's voice from the provided
   rules + `context` line before touching the draft (simulation is what makes
   this calibration rather than copy-editing).
@@ -458,8 +492,8 @@ Go back to Phase 1 and ask what you got wrong about their internal state.
 If the user edits the draft file directly (detected via system-reminder about file modification),
 invoke the **`draft-learner`** skill: `/perspective-writer:draft-learner`
 
-This skill handles diffing, rule extraction, and updating `.claude/rules/` automatically.
-Do NOT duplicate its logic here.
+That skill handles diffing, rule extraction, and the **persist** operation automatically.
+Do NOT duplicate its logic here, and do not write the rules yourself.
 
 Each user edit begins another Revise pass. Per "Mode: Compose vs. Revise", a revision is not mere
 wording polish — before reworking the draft again, re-anchor to the prior correspondence
@@ -470,45 +504,81 @@ wording polish — before reworking the draft again, re-anchor to the prior corr
 After the user confirms the draft (or after tone corrections), ask:
 
 > "要不要把跟 [recipient] 的通信習慣記下來？這樣下次寫信就不用重新調整語氣了。
-> 我會存在 `.claude/rules/` 裡，你隨時可以打開修改。"
+> 我會存在這個 plugin 的規則位置，寫完會告訴你路徑，你隨時可以打開修改。"
 
-If the user agrees, persist everything to `.claude/rules/correspondence-[recipient].md`:
+If the user agrees, run the **persist** operation for this subject and genre. The
+target file, the core-versus-facet split, and the storage layout are defined in
+[`references/rules-resolution.md`](../../references/rules-resolution.md) — cite the
+*Named resolution contract* and *Storage layout* sections; do not construct a path here.
+
+What goes where:
+
+- Anything that does **not** vary with genre — tone calibration, word preferences,
+  relationship position, fact fixpoints, red lines — goes to the subject's **core**.
+- Anything specific to this genre — greeting form, letter structure, CC convention,
+  formatting obligations — goes to the subject's **facet** for this genre.
+
+A subject writing in only one genre gets a core file and no facet. Do not create a
+facet just to have one; facets appear when a second genre first arises.
+
+Core file shape:
 
 ```markdown
-# 通信規則 — [Recipient Name]
+# [Subject Name] — core
 
 ## 基本資訊
 | 欄位 | 內容 |
 |------|------|
 | 姓名 | ... |
-| 稱呼 | **...**（寫信時一律用此稱呼） |
+| 稱呼 | **...**（一律用此稱呼） |
 | Email | ... |
 | 關係 | 長輩/同輩/晚輩 |
 | 職位 | ... |
 
-## 稱呼與語氣
-- 開頭：...
-- 文中：...
-- 結尾：...
+## 語氣校準
 - 語氣特徵：...
+- 避免的姿態：...
 
 ## 用詞偏好
 | 避免 | 改用 |
 |------|------|
 | ... | ... |
 
-## 信件結構
+## 事實固定點
+- ...（只在某文類引用得到的，在該條後面行內標註文類）
+
+## 紅線
+- ...（不可宣稱的事；facet 不得覆蓋本節）
+```
+
+Facet file shape — the header states precedence, per the contract's
+*Composition precedence* section:
+
+```markdown
+# [Subject Name] — [genre]
+
+> 繼承 core。本檔可覆蓋 core 的一般慣例，但不得違背 core 的紅線與事實固定點。
+
+## 稱呼與開頭
+- 開頭：...
+- 文中：...
+- 結尾：...
+
+## 結構
 1. ...
 2. ...
 
-## 注意事項
+## 本文類特有的注意事項
 - ...
 ```
 
 **Important**:
-- **不要寫進 CLAUDE.md** — 通信對象的個人資訊放在 rules 裡就好，CLAUDE.md 太外顯。
-- If the rules file already exists, READ it first and UPDATE/ADD. Don't overwrite.
-- Always tell the user: "設定存在 `.claude/rules/correspondence-[name].md`，你隨時可以打開修改。"
+- **不要寫進 CLAUDE.md** — 對象的個人資訊放在 subject 的 core 裡就好，CLAUDE.md 太外顯。
+- If the target file already exists, READ it first and UPDATE/ADD. Don't overwrite.
+- Always tell the user which file was written and that they can open and edit it. Use the
+  path the **persist** operation returned — do not recite a path pattern from memory.
+- If the resolve in Phase 0b returned `legacy`, this is the moment to offer migration:
+  the rules you are about to update still live at the old location.
 - If the user corrected the tone during Phase 6, the correction itself is the most valuable thing to persist.
   Capture the specific fix (e.g., "用『請教』不用『討論』") not just a vague rule.
-- Use `correspondence-[recipient].md` naming so multiple recipients each have their own file.
+  A tone correction is almost always **core** — it holds across genres.

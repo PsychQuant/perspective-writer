@@ -25,7 +25,7 @@ break down when the writer IS the expert on the topic being discussed.
 
 ```
 TaskCreate(name="step1_identify_calibration",     description="Step 1: 從 user 輸入抽出 who / domain / current problem / desired positioning")
-TaskCreate(name="step2_read_existing_rules",      description="Step 2: Glob .claude/rules/correspondence-*.md 並 Read 出現有 rules")
+TaskCreate(name="step2_read_existing_rules",      description="Step 2: 對該對象執行 resolve（見 references/rules-resolution.md 的 Resolution order）並 Read 回傳的檔案")
 TaskCreate(name="step3_add_role_section",         description="Step 3: 加或更新「## 角色定位」section（含語氣切換表、替換詞彙）")
 TaskCreate(name="step4_update_related_sections",  description="Step 4: 檢查信件結構 / 用詞偏好 / 注意事項是否要跟著調")
 TaskCreate(name="step5_confirm_with_user",        description="Step 5: 給 user 摘要：角色對哪些 domain 是專家、哪些 domain 仍請教")
@@ -41,7 +41,7 @@ TaskCreate(name="step5_confirm_with_user",        description="Step 5: 給 user 
 
 From the user's input, extract:
 
-1. **Who** — which recipient's rules need updating (check `.claude/rules/correspondence-*.md`)
+1. **Who** — which subject's rules need updating. Find them with the **resolve** operation; do not glob a directory.
 2. **What domain** — the user's area of expertise (e.g., statistics, programming, psychometrics)
 3. **Current problem** — what language feels wrong (e.g., "用請教問 ANOVA 的事很奇怪")
 4. **Desired positioning** — how the user wants to come across in that domain
@@ -49,7 +49,7 @@ From the user's input, extract:
 ## Step 2: Read Existing Rules
 
 ```
-Glob: .claude/rules/correspondence-*.md
+resolve(subject, genre) — see references/rules-resolution.md, sections *Resolution order* and *Dual-location conflict*
 Read the matched file(s)
 ```
 
@@ -100,13 +100,13 @@ Check if other sections need adjusting:
 Show a summary:
 
 ```
-已更新 `.claude/rules/correspondence-[name].md`：
+已更新 [resolve 回傳的檔案]：
 
 角色定位：
 - 統計/方法論 → 你是專家，用「建議」「確認」
 - 商業/產業 → 學長是專家，用「請教」
 
-你可以打開 `.claude/rules/correspondence-[name].md` 確認或修改。
+你可以打開該檔確認或修改。
 ```
 
 ## Important

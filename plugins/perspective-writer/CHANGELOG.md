@@ -11,6 +11,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-08-05
+
+### Changed
+
+- **BREAKING — writing rules now live behind a named resolution contract.** Where a
+  subject's rules are stored, how a skill finds them, and what it must disclose are
+  defined once in `references/rules-resolution.md`. All four skills cite that document
+  instead of constructing paths of their own; previously each assembled its own path
+  and the README described a location without describing how to resolve it.
+- **BREAKING — per-subject rules move out of the injected project rules directory.**
+  A subject now has a directory holding a genre-independent `core.md` plus on-demand
+  genre facets, under a dot-prefixed namespace that is not injected into session
+  context. Rules were previously a single file per recipient in a directory whose
+  entire contents reach every session regardless of task.
+- **BREAKING — external consumer contract v2.** The `recipient-rules` field now refers
+  to a resolved location rather than a single file, and the three outcome statuses
+  (`subject-specific` / `legacy` / `generic`) are named. Consumers that reconstruct the
+  canonical location themselves must follow the resolution order. `MIN_PW_CONTRACT`
+  moves to `3.0.0`.
+- Rules split by **who reads them**, not by how narrowly they apply. Categories this
+  plugin reads move into the namespace; code-comment style and general writing style
+  stay in the injected directory, because no skill here reads them and injection is
+  their only delivery mechanism. Moving those would remove their only reader silently.
+
+### Added
+
+- `references/rules-resolution.md` — the resolution contract: storage layout,
+  resolution order, outcome statuses, dual-location conflict, composition precedence,
+  split criterion, and the load gate.
+- Load gate: drafting is refused when no resolution was performed. The gate binds to
+  the lookup not having run, not to the rules file being absent, so genuine first
+  contact remains a normal path — disclosed, not blocked.
+- `scripts/migrate-rules.sh` — idempotent one-time migration. Converts each legacy
+  rules file into a subject `core.md` and leaves a redirect placeholder at the legacy
+  path so a consumer's existence check keeps passing. Creates no facets.
+
+### Notes
+
+- Legacy locations remain readable; an unmigrated workspace keeps working and is told
+  migration is available. Migration is reversible.
+- Known residual: a resolution run against an incorrect location returns `generic` and
+  is indistinguishable from genuine first contact. The load gate narrows the failure
+  space; it does not close this gap.
+
+
 ## [2.11.0] - 2026-07-19
 
 ### Added
