@@ -1,0 +1,17 @@
+name: contract consistency
+
+# The repository uses direct-commit, not pull requests, so push is the only
+# automatic trigger point. A check that only runs when someone remembers to run
+# it is the same as no check.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert skills agree with the resolution contract
+        run: bash plugins/perspective-writer/scripts/check-contract-consistency.sh

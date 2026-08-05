@@ -11,6 +11,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.0] - 2026-08-05
+
+### Added
+
+- **A mechanical check for contract consistency**, plus the repository's first CI
+  workflow to run it on push to `main`. The repository uses direct-commit rather than
+  pull requests, so push is the only automatic trigger point; a check that runs only
+  when someone remembers to run it is the same as no check.
+- Five assertions: no skill constructs a storage path inline (allowlisting only the
+  contract and the two scripts that legitimately name paths), every contract section a
+  skill cites exists, the reader-based split criterion still names its two exceptions
+  with the reason, and the published contract still names the three outcome statuses.
+
+### Notes
+
+- **Deliberately shape-agnostic.** No assertion counts or names skills. The skill set
+  went from four to five with the core/facet split and grows with each genre facet;
+  count-based assertions would break on every such change, and a check that cries wolf
+  gets ignored — the same as not having one.
+- **What it cannot check**: whether a skill *follows* the contract it cites. That is
+  prose read by a model and has no mechanical judgment. This check covers the layer
+  below — that write sites and read sites address the same place — which is where the
+  silent failure actually lives: rules get written and never load, and the only symptom
+  is drafts that stop sounding like the writer.
+- The migration script's idempotency is not covered here. That needs a scratch directory
+  and file operations — a real test, not a grep — and this issue's scope was explicitly
+  a mechanical net rather than a test suite.
+
+
 ## [4.0.0] - 2026-08-05
 
 ### Changed

@@ -25,6 +25,21 @@ Per-subject style rules live in the **target repo**, not in this plugin — rela
 
 Rules that no skill here reads — general writing style, code-comment style — stay in the target repo's injected `.claude/rules/`, because injection is their only delivery mechanism. See the contract's *Split criterion by reader*.
 
+## Contract consistency check
+
+`plugins/perspective-writer/scripts/check-contract-consistency.sh` asserts that every skill agrees
+with the resolution contract: none constructs a storage path of its own, every contract section a
+skill cites exists, the reader-based split criterion still names its exceptions, and the published
+contract still names the three outcome statuses. It runs on push to `main`.
+
+It is deliberately **shape-agnostic** — no assertion counts or names skills. The skill set grew from
+four to five when the core/facet split landed and grows with each genre facet; assertions about
+counts would break on every such change, and a check that cries wolf gets ignored.
+
+What it cannot check: whether a skill *follows* the contract it cites. The contract is prose read by
+a model. This check covers the layer below — that write sites and read sites address the same place —
+which is where the silent failure lives.
+
 ## Install
 
 ```bash
