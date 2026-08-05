@@ -43,6 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Load gate: drafting is refused when no resolution was performed. The gate binds to
   the lookup not having run, not to the rules file being absent, so genuine first
   contact remains a normal path — disclosed, not blocked.
+- Skill-packaged subject rules recognised as a **current** arrangement, not a legacy
+  one. A workspace may package a subject's rules as `.claude/skills/correspondence-<subject>/`;
+  resolution treats it as that subject's core and returns `subject-specific`, so the
+  load gate does not falsely disclose "no existing rules". One skill per genre for the
+  same subject is a core-and-facet split expressed with skill boundaries, not a conflict.
 - `scripts/migrate-rules.sh` — idempotent one-time migration. Converts each legacy
   rules file into a subject `core.md` and leaves a redirect placeholder at the legacy
   path so a consumer's existence check keeps passing. Creates no facets.

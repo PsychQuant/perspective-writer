@@ -131,3 +131,34 @@ The published consumer contract SHALL describe the rules path field as referring
 
 - **WHEN** an external consumer implements handover of a rules location
 - **THEN** the contract tells it the three possible outcome statuses and the resolution order it must follow
+
+### Requirement: Skill-packaged subject rules resolve as core
+
+A workspace MAY package a subject's rules as a skill rather than as files under the plugin namespace. Resolution SHALL consult that arrangement when no subject directory exists, SHALL treat a matching skill as the subject's core at the same precedence as a core file, and SHALL return the subject-specific outcome rather than the legacy outcome. Where a workspace packages one skill per genre for the same subject, resolution SHALL return every matching skill rather than treating the second as a conflict.
+
+#### Scenario: Subject rules are packaged as a skill
+
+- **WHEN** no subject directory exists but a skill packaging that subject's rules is present
+- **THEN** resolution returns that skill's content as the subject's core
+- **AND** the outcome status is subject-specific, not legacy
+- **AND** no migration is offered, because the arrangement is current rather than deprecated
+
+#### Scenario: Skill content is already loaded
+
+- **WHEN** a skill packaging the subject's rules was triggered by its own description before this plugin ran
+- **THEN** the reader uses the rules already present rather than reading the file a second time
+
+#### Scenario: One skill per genre for the same subject
+
+- **WHEN** a subject has two skills packaging rules for two different genres
+- **THEN** resolution returns both, core-like first
+- **AND** does not report a conflict
+
+##### Example: Placement of a subject with skill-packaged rules
+
+| Sources present for a subject | Resolution uses | Status | Conflict reported |
+| ----------------------------- | --------------- | ------ | ----------------- |
+| subject directory only | subject directory | subject-specific | no |
+| skill only | skill | subject-specific | no |
+| legacy file only | legacy file | legacy | no |
+| subject directory and skill | subject directory | subject-specific | yes, naming both |

@@ -56,8 +56,11 @@ conventions override an earlier file's:
 2. `subjects/<subject>/core.md` — the subject's cross-genre layer, when the subject directory is present.
 3. `subjects/<subject>/<genre>.md` — the subject's facet for this genre, when present.
 
-When step 2 finds no subject directory, resolve consults the legacy location for
-that subject before concluding. See **Legacy location remains readable**.
+When step 2 finds no subject directory, resolve consults two further sources before
+concluding, in this order:
+
+- a **skill-packaged** rule set for that subject — see **Skill-packaged subject rules**;
+- the **legacy** single-file location — see **Legacy location remains readable**.
 
 Example with all three levels present:
 
@@ -88,9 +91,10 @@ stated rather than inferred from the output.
 
 ## Dual-location conflict
 
-When rules for the same subject exist at both the current location and the legacy
-location — and the legacy file is real content, not a redirect placeholder —
-resolve uses the current location and **reports the conflict**.
+When rules for the same subject exist in more than one of the three sources — the
+subject directory, a skill-packaged rule set, or the legacy location holding real
+content rather than a redirect placeholder — resolve uses the **subject directory**
+and **reports the conflict**, naming every source it found.
 
 Choosing either side silently is prohibited. A half-migrated workspace is a state
 the user needs to know about; picking a winner without saying so converts a
@@ -185,6 +189,42 @@ requires observability at the consumer boundary, which is out of scope here.
 Do not read the load gate as restoring the guarantee that injection provided.
 Injection guaranteed the rules were present before drafting could begin. The gate
 approximates that; it does not reproduce it.
+
+## Skill-packaged subject rules
+
+A workspace may package a subject's rules as a **skill** rather than as files under
+this namespace:
+
+```
+.claude/skills/correspondence-<subject>/SKILL.md
+```
+
+This is a **legitimate current arrangement, not a deprecated one.** It exists for a
+reason that is orthogonal to this contract: a skill's frontmatter `description` is
+the only part that stays resident, so the body is loaded exactly when the
+description matches — the same conditional-loading property this namespace achieves
+by not being injected, reached by a different mechanism.
+
+Resolve treats such a skill as the subject's **core**, at step 2's precedence, and
+returns `subject-specific` — not `legacy`. There is nothing to migrate.
+
+Two consequences the reader must handle:
+
+- **The content may already be in context.** Unlike the other sources, a skill can be
+  loaded by its own trigger before this plugin runs. Reading the file again is
+  harmless but redundant; if the subject's rules are already present, use them and do
+  not re-read.
+- **A skill can hold facets too.** A workspace that packages one skill per genre
+  (`correspondence-<subject>`, `proposal-style-<subject>`) has expressed the same
+  core-and-facet split this contract describes, using skill boundaries as the split.
+  Resolve returns every matching skill for that subject, core-like first. Do not treat
+  the second one as a conflict.
+
+**Why this is in the contract rather than left to the migration script:** a resolution
+that does not know about this arrangement returns `generic`, and the load gate then
+discloses "this subject has no existing rules" — which is false, and false in the
+direction that reads as reassuring. A wrong `generic` is worse than a missing source,
+because the disclosure actively tells the user that nothing was lost.
 
 ## Legacy location remains readable
 
