@@ -8,10 +8,18 @@ Core discipline: **Tarski's T-Schema**. Every sentence must have a concrete, ver
 
 | Skill | Purpose |
 |-------|---------|
-| `perspective-writer` | Main 6-phase drafting flow: understand writer → understand recipient → simulate → write → anti-pattern check → iterate |
+| `perspective-writer` | **Core + entry point.** Genre-independent discipline: referent check → determine genre and load its facet → resolve rules → understand writer → simulate → write → anti-pattern check → iterate |
+| `perspective-writer-email` | **Correspondence facet.** Recipient understanding, opening priority, address and cultural conventions, pressure calibration, recipient ordering, draft output format |
 | `role-calibrator` | Adjust correspondence tone per expertise domain (the writer may be junior in one domain, the expert in another) |
 | `draft-learner` | Learn style rules from file-modification diffs during drafting sessions → persist via the resolution contract |
 | `save-feedback` | Capture conversational feedback ("短一點" / "太直接了") into reusable rules — the feedback that never produces a file diff |
+
+**A genre facet is loaded by the core, not triggered on its own.** The core determines the genre in its
+first phase and loads the matching facet from its body. Skill triggering is semantic matching — making
+completeness depend on two independent matches would double the chance of drafting with only half the
+rules, and that failure is silent (a letter written without greeting conventions still reads fluently).
+When no facet exists for the determined genre, the core says so and applies genre-independent discipline
+alone rather than falling back to correspondence conventions from memory.
 
 Per-subject style rules live in the **target repo**, not in this plugin — relationship context stays with the project it belongs to. Where exactly, and how a skill finds them, is defined by the resolution contract in [`plugins/perspective-writer/references/rules-resolution.md`](plugins/perspective-writer/references/rules-resolution.md): a subject directory holds a genre-independent `core.md` plus on-demand genre facets, under a dot-prefixed namespace that is **not** injected into session context.
 
@@ -52,7 +60,7 @@ DRAFT>>>
 
 **Behavior promises**:
 
-1. **Calibrate is a third mode** — distinct from the base skill's Compose and Revise. The base rule "Revise never skips the understanding phases" deliberately does NOT apply: the consumer already carries the anchored understanding and there is no human to interview mid-pass. Phase mapping: Phase 0 bootstrap and Phases 5b/6/6b/7 do not apply; Phase 1 is skipped; Phase 2 is fed by `recipient-rules`; Phase 3 (voice simulation) runs internally from the provided rules + context; Phase 4 operates on the provided draft; Phase 5 anti-pattern check runs.
+1. **Calibrate is a third mode** — distinct from the base skill's Compose and Revise. The base rule "Revise never skips the understanding phases" deliberately does NOT apply: the consumer already carries the anchored understanding and there is no human to interview mid-pass. Section mapping — **named, not numbered**, so it survives reordering. **This mode loads no genre facet**, so every facet section is out of scope; recipient context comes from `recipient-rules` instead. Core sections that do not apply: *Bootstrap Stage Task List*, *Determine the Genre and Load Its Facet*, *Present and Iterate*, *Learn from User Edits*, *Persist for Next Time*. *Understand the Writer* is skipped; *Resolve the Subject's Rules* runs against the supplied location; *Simulate, Don't Compose* runs internally; *Write* operates on the provided draft; *Anti-Patterns Checklist* runs.
 2. **`recipient-rules` is a resolved location, not a single file.** Since 3.0.0 a subject's rules are a `core.md` plus zero or more genre facets under a subject directory, and a legacy single-file path may hold a redirect placeholder. The skill reads the value through its **resolve** operation, which follows the placeholder and composes core and facet in order. A consumer that reconstructs the canonical location itself MUST follow the contract's *Resolution order* rather than assume one file at one path.
 3. **Three outcome statuses.** Resolution returns exactly one of:
 

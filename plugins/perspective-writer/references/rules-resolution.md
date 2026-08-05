@@ -214,11 +214,18 @@ Two consequences the reader must handle:
   loaded by its own trigger before this plugin runs. Reading the file again is
   harmless but redundant; if the subject's rules are already present, use them and do
   not re-read.
-- **A skill can hold facets too.** A workspace that packages one skill per genre
-  (`correspondence-<subject>`, `proposal-style-<subject>`) has expressed the same
-  core-and-facet split this contract describes, using skill boundaries as the split.
-  Resolve returns every matching skill for that subject, core-like first. Do not treat
-  the second one as a conflict.
+- **A subject's rules can be split across skills too.** A workspace that packages one
+  skill per genre (`correspondence-<subject>`, `proposal-style-<subject>`) has expressed
+  the same core-and-facet split this contract describes for rule *files*, using skill
+  boundaries as the split. Resolve returns every matching skill for that subject,
+  core-like first. Do not treat the second one as a conflict.
+
+  **Do not confuse this with a *genre facet* of the writing skill itself.** Those are two
+  different things that both use the word "facet": here it is *one subject's rules* split
+  by genre in a workspace; there it is *the skill's own procedure* split by genre in this
+  plugin (`perspective-writer` core plus `perspective-writer-<genre>`). A workspace facet
+  holds what to say to this person in this genre; a skill facet holds how to write this
+  genre at all.
 
 **Why this is in the contract rather than left to the migration script:** a resolution
 that does not know about this arrangement returns `generic`, and the load gate then

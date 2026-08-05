@@ -11,6 +11,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-08-05
+
+### Changed
+
+- **BREAKING — the writing skill is now a core plus genre facets.** Everything that does
+  not vary with genre stays in `perspective-writer`; correspondence conventions move to a
+  new `perspective-writer-email` facet. A genre other than correspondence now has somewhere
+  to put its own conventions instead of inheriting letter rules or getting no structure.
+- **The core keeps its name.** A downstream consumer hardcodes both the invocation and the
+  presence probe, and its integration degrades gracefully — renaming would have broken the
+  entry with no error, replies posting uncalibrated and nothing saying so. "Core" is a role
+  here, not a suffix.
+- **The facet is loaded by the core's body, not by its own trigger.** There is no skill
+  inheritance mechanism in this harness; linking is prose. Making completeness depend on two
+  independent semantic triggers would double the chance of drafting with half the rules, and
+  that failure is silent. The core determines the genre in Phase 0a and instructs the load —
+  the same shape the rules-resolution step already uses.
+- **The published calibration contract now names sections instead of phase numbers**, so the
+  mapping survives this and any future reordering. The calibration entry itself is unchanged.
+- The anti-pattern checklist was split row by row, not moved as a block: 16 genre-independent
+  rows stay in the core, 2 correspondence rows move to the facet. Moving it wholesale would
+  either strip the core of its general checks or leave letter rules embedded in it.
+
+### Notes
+
+- **Trade-off accepted: completeness is now compositional.** Before, one trigger guaranteed a
+  letter had everything it needed. Now it needs the core plus one loaded facet. Loading by
+  instruction rather than by trigger is the strongest available mitigation, but it is an
+  instruction, not a gate — a reader that skips it produces a genre-independent draft. The
+  guarantee is weaker than it was; that is the price of letting other genres exist.
+- Only the correspondence facet ships. Other genres have nothing to move yet, and an empty
+  facet would be shape without substance.
+
+
 ## [3.1.0] - 2026-08-05
 
 ### Changed
