@@ -11,6 +11,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.2.0] - 2026-08-07
+
+### Changed
+
+- **Calibrate mode now resolves from `recipient` when `recipient-rules` is absent.**
+  The contract previously said *Resolve the Subject's Rules* "does not apply" to this
+  mode. That was true of the **gate** and the **disclosure** — both need a human, and
+  a programmatic pass has none — but it was written as though it were also true of the
+  **lookup**, which needs no human at all. The three got collapsed into one sentence
+  and calibrate lost the ability to find anything on its own.
+- Consequence of the old wording: every consumer had to resolve the order itself.
+  With three sources and placeholder-following, that is the same single-source defect
+  this contract exists to remove — relocated outside this repository, where
+  `check-contract-consistency.sh` cannot see it. Observed downstream: a consumer
+  hardcoding the legacy single-file path found nothing in a workspace using
+  skill-packaged rules, passed nothing, and produced an uncalibrated reply while the
+  rules sat in a skill beside it.
+- `MIN_PW_CONTRACT` floor moves to `4.2.0` for consumers that want to omit
+  `recipient-rules`.
+
+### Notes
+
+- **Zero behavior change for a consumer that already passes `recipient-rules`.** This
+  only adds a path where there previously was none.
+- The gate and the disclosure remain out of scope for calibrate mode. What changed is
+  that "the lookup applies" is now stated separately from "the gate does not".
+
+
 ## [4.1.0] - 2026-08-05
 
 ### Added

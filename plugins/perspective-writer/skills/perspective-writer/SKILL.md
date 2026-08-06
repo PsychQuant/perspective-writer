@@ -317,14 +317,26 @@ there is no human to interview mid-pass.
   stage task list), *Determine the Genre and Load Its Facet*, *Present and Iterate*,
   *Learn from User Edits*, and *Persist for Next Time*.
 - ***Understand the Writer* is SKIPPED** — do not interview.
-- **Recipient context is fed by `recipient-rules`** — treat the provided value as a
-  *resolved location* and read it through the **resolve** operation, so a
-  redirect placeholder at a legacy path is followed (see the contract's
-  *Redirect placeholder is followed once*). Absent field, or a location that
-  resolves to nothing → the SAME fallback: a conservative generic register, and
-  the return header says `status=generic`. Never guess intimacy.
-- ***Resolve the Subject's Rules* does not apply** — there is no human to disclose to and no drafting
-  decision to gate; the `status=` header carries the outcome to the consumer instead.
+- **Recipient context comes from `recipient-rules`, or from `recipient` when that
+  field is absent.**
+
+  | `recipient-rules` | what you do |
+  |---|---|
+  | supplied | treat it as a *resolved location* and read it through **resolve**, so a redirect placeholder at a legacy path is followed (contract: *Redirect placeholder is followed once*) |
+  | **absent** | **run resolve against the `recipient` field instead** — the full order, all sources (contract: *Resolution order*) |
+  | supplied but resolves to nothing | conservative generic register, `status=generic` |
+
+  `recipient` is a required field, so the absent-`recipient-rules` case always has
+  something to resolve from. Falling straight to generic there would push the
+  resolution order onto every consumer — the same single-source defect the contract
+  exists to remove, only relocated outside this repo where no consistency check can
+  see it. Never guess intimacy; but do look before concluding there is nothing.
+- **From *Resolve the Subject's Rules*, the lookup applies; the gate and the
+  disclosure do not.** Those are three separate things and only two of them need a
+  human. There is nobody to disclose to and no drafting decision to gate, so the
+  refuse-if-no-lookup gate and the spoken disclosure are both out of scope — but the
+  lookup itself needs no human and is what produces the outcome the `status=` header
+  carries back to the consumer.
 - ***Simulate, Don't Compose* runs internally** — simulate the writer's voice from the provided
   rules + `context` line before touching the draft (simulation is what makes
   this calibration rather than copy-editing).
