@@ -290,6 +290,52 @@ Before presenting the draft, check for these AI writing tells and remove every i
 | "新增" / "新加" / "另新增" framing in a one-piece document | In a finished document every part is integral. "第四章新增之…" / "本研究新增了…" exposes multi-pass assembly and reads as patched-together — the reader is not supposed to see the seams. | Drop the "新增" frame: "第四章新增之 X" → "第四章之 X" / "本研究之 X". State what the section *is*, not when it was bolted on. |
 | **外歸因推卸**（解釋遲交／失誤時把主因推給流程或別人：「因為 GBA 代碼還沒好」「因為某流程慢」「因為經費還沒確認」）| 即使屬實，外歸因讀起來像卸責、推給制度或他人，語用上顯得不負責——在道歉／說明遲交的信裡最傷信任。「找一個更有說服力的外部理由」不會讓它不像推，只會更像。 | 內歸因、承擔：主因寫成自己的責任（「我剛到職、首次辦理、對送件時程不熟、未能及早啟動」）；外部因素只當次要、輕帶過、不當擋箭牌；結尾收在自己身上（「這主要是我規劃上的不足，往後會提早準備」）。誠實 acknowledge 但不過度自貶。要不像「推」，是把責任接回自己，不是換一個外部理由。 |
 
+## Phase 5c: Ensemble Review (optional)
+
+Phase 5 是你自己對草稿的檢查。這一步是**第二層、獨立視角**的複核：把草稿交給多個互不相見的 reviewer，各自從不同軸線找問題。
+
+單一視角會漏掉自己看不見的東西。最典型的是**對收件人而言可查證為假**的敘述 —— 寫的人覺得說得通，但收件人手上有你沒想到的紀錄，一讀就知道不對。這種錯誤自己檢查抓不到，因為你缺的正是對方的視角。
+
+### 何時跑
+
+**不是每封信都跑。** 由 facet 決定觸發條件 —— 書信文類的判準見 `perspective-writer-email` 的「Phase 5c 增補：何時提示 ensemble 複核」。核心只定義偵測與降級語意；何時觸發是文類特有的。
+
+### 偵測
+
+```bash
+ls -d ~/.claude/plugins/cache/*/parallel-ai-agents >/dev/null 2>&1
+```
+
+有 → 提示使用者可跑 `/parallel-ai-agents:pai-ensemble` 複核，並附上下方三軸 lens 作為 review focus。
+
+**刻意不寫成 script**：偵測只有一行，而把它包成 `scripts/` 下的 runtime helper 會有兩個代價 —— 與其他 plugin 的同類 detector 產生維護分歧，或引用別的 plugin 的 detector 而製造出本節正要避免的依賴。本 repo 的 `scripts/` 是 CI 一致性斷言的位置，不是 runtime helper 的位置。
+
+### 降級（鐵律）
+
+偵測失敗 → **印一行建議後照常完成 Phase 6**：
+
+> 未偵測到 `parallel-ai-agents`。若想要寄出前的多視角複核，可安裝該 plugin；本次照常交付草稿。
+
+**永不阻斷交付。** 複核是加分項，不是前置條件。沒有這個 plugin 的使用者必須能拿到完全一樣的草稿，只是少一層檢查。任何「因為缺 plugin 所以不給草稿」的行為都是違規。
+
+### 三軸信件 lens
+
+跑 ensemble 時用這三軸，**不要**沿用泛用的學術寫作 lens（那查的是論述邏輯、章節銜接、APA 格式、hedging，與書信情境不匹配）：
+
+| 軸 | 問什麼 |
+|---|---|
+| **事實可查證性** | 每個事實主張有沒有來源？**站在收件人的位置**看，哪一句會被當場戳破？特別檢查：時間敘述、金額、經手人、流程細節 —— 這些收件人往往有自己的紀錄 |
+| **語氣與關係層級** | 敬語密度、自稱、請求強度是否與雙方實際關係相稱？有無過度謙卑（顯得諂媚或不專業）或過度親暱（顯得失禮）？ |
+| **行動項明確性** | 收件人讀完知不知道要做什麼、何時之前、需不需要回覆？還是只知道「你想表達什麼」但不知道該怎麼動作？ |
+
+第一軸是這三軸裡最容易被忽略、代價也最高的 —— 語氣不對頂多顯得生疏，事實被戳破則直接損傷整封信的可信度。
+
+### 非目標
+
+- **不**在 `plugin.json` 宣告對 `parallel-ai-agents` 的依賴 —— 該 plugin 已在自己的 workflow 中反向引用本 skill，宣告依賴會形成循環
+- **不**要求 `codex-pro` —— 它在 `pai-ensemble` 內部本就是 optional，此處升格為必要屬過度約束
+- **不**阻斷主流程（見上方降級鐵律）
+
 ## Calibrate-draft entry (EXTERNAL-CONSUMER CONTRACT, 2.11.0+, #1)
 
 When the invocation args contain a `CALIBRATE-DRAFT REQUEST v1` block, you were
