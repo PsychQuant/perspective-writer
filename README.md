@@ -25,6 +25,28 @@ Per-subject style rules live in the **target repo**, not in this plugin — rela
 
 Rules that no skill here reads — general writing style, code-comment style — stay in the target repo's injected `.claude/rules/`, because injection is their only delivery mechanism. See the contract's *Split criterion by reader*.
 
+## Pre-send review vs. long-term learning
+
+Four of the pieces above look like they overlap — they don't. They sit on different time scales and use
+different numbers of viewpoints:
+
+| | Time scale | Viewpoints | What it does |
+|---|---|---|---|
+| `draft-learner` · `role-calibrator` · `save-feedback` | **Long-term**, accumulating across sessions | One | Learn the writer's style from their edits and feedback; calibrate tone to the writer's standing in each domain |
+| Core **Phase 5c: Ensemble Review** | **Single letter**, just before it goes out | Many, mutually blind | Independently re-check *this* draft's facts, register, and action items |
+
+The learning skills make the *next* draft sound more like you. Phase 5c catches what is wrong with *this*
+one. A style model built from your past edits cannot tell you that a sentence is verifiably false to the
+person receiving it — that needs a reader who is not you.
+
+Phase 5c is **optional and soft**. It looks for `parallel-ai-agents` at run time; when that plugin is
+absent it prints one line and delivers the draft unchanged. Nothing is declared in `plugin.json`, and
+`codex-pro` is never required (it is already optional inside `pai-ensemble` itself).
+
+The relationship runs both ways, and is soft in both directions: `parallel-ai-agents` calls this skill to
+analyse writing style inside its `ensemble-academic-review`, and this skill offers `pai-ensemble` as a
+pre-send check. Either plugin works alone; neither declares the other as a dependency.
+
 ## Contract consistency check
 
 `plugins/perspective-writer/scripts/check-contract-consistency.sh` asserts that every skill agrees

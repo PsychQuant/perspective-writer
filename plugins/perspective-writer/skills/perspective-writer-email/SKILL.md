@@ -127,6 +127,26 @@ core 的 anti-pattern 表對所有文類適用，仍然照跑。以下兩列是*
 | Ending with "期盼" "期許" "展望" | Overly formal, sounds like a press release | End like a person: "謝謝老師" or "希望有機會跟老師聊聊" |
 | Extra `---` / `***` hrules inside letter body | AI uses horizontal rules to segment emails into card-like sections. Humans don't—they use paragraph breaks. | Delete every hrule except the Phase 5b wrapper pair. One paragraph = one idea; adjacent paragraphs separated by blank lines, not hrules |
 
+## Phase 5c 增補：何時提示 ensemble 複核
+
+core 的「Phase 5c: Ensemble Review (optional)」定義了偵測與降級語意，但把「何時觸發」留給文類決定。書信的判準如下。
+
+**任一命中即提示**：
+
+- **收件人是機構或不熟識的對象** —— 學會、行政單位、期刊編輯、初次往來的合作者。判準不是對方的職級，是**你們之間有沒有既有的往來節奏**：每週開會的同事不算，一年通兩次信的窗口算
+- **內容涉及金錢、承諾、道歉、申請、或正式請求** —— 這幾類的共同點是**寄出後會被引用**。對方可能轉發、存檔、據以行動；寫錯的代價不是尷尬，是要另外發一封更難寫的信去更正
+- **草稿長度逾門檻** —— 長信的每一段都是新的出錯機會，而寫的人到後段已經看不見前段的問題
+
+**不提示的反例**：
+
+- 內部同事的隨手訊息（「資料放好了」「明天十點可以」）
+- 純轉發、代為傳話
+- 一兩句的確認回覆（「收到，謝謝」）
+
+這些信的共同點是**錯了改口的成本很低**，跑 ensemble 的成本高於它擋下的風險。
+
+> 判準寫在 facet 而非 core，因為「何謂正式信」是書信文類特有的。自傳、個人陳述等其他文類若要接複核，各自定義自己的觸發條件，不共用本節。
+
 ## Phase 5b: Output Format
 
 **CRITICAL: Never use markdown blockquote (`>`) for email/letter drafts.**
