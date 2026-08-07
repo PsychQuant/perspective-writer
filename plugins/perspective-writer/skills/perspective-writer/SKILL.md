@@ -308,6 +308,8 @@ ls -d ~/.claude/plugins/cache/*/parallel-ai-agents >/dev/null 2>&1
 
 有 → 提示使用者可跑 `/parallel-ai-agents:pai-ensemble` 複核，並附上下方三軸 lens 作為 review focus。
 
+**偵測為真但實際不可用，一律視同偵測失敗**：目錄存在不等於 plugin 可用 —— 可能是殘留的 cache、plugin 被停用、或 command 註冊失敗。若提示後 command 不存在、或複核執行失敗，**不重試、不追問，直接走下方降級路徑照常完成 Phase 6**。這條把假陽性收進同一個出口，讓「偵測」的任何錯誤都不會演變成阻斷。
+
 **刻意不寫成 script**：偵測只有一行，而把它包成 `scripts/` 下的 runtime helper 會有兩個代價 —— 與其他 plugin 的同類 detector 產生維護分歧，或引用別的 plugin 的 detector 而製造出本節正要避免的依賴。本 repo 的 `scripts/` 是 CI 一致性斷言的位置，不是 runtime helper 的位置。
 
 ### 降級（鐵律）

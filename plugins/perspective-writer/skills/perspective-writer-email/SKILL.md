@@ -127,26 +127,6 @@ core 的 anti-pattern 表對所有文類適用，仍然照跑。以下兩列是*
 | Ending with "期盼" "期許" "展望" | Overly formal, sounds like a press release | End like a person: "謝謝老師" or "希望有機會跟老師聊聊" |
 | Extra `---` / `***` hrules inside letter body | AI uses horizontal rules to segment emails into card-like sections. Humans don't—they use paragraph breaks. | Delete every hrule except the Phase 5b wrapper pair. One paragraph = one idea; adjacent paragraphs separated by blank lines, not hrules |
 
-## Phase 5c 增補：何時提示 ensemble 複核
-
-core 的「Phase 5c: Ensemble Review (optional)」定義了偵測與降級語意，但把「何時觸發」留給文類決定。書信的判準如下。
-
-**任一命中即提示**：
-
-- **收件人是機構或不熟識的對象** —— 學會、行政單位、期刊編輯、初次往來的合作者。判準不是對方的職級，是**你們之間有沒有既有的往來節奏**：每週開會的同事不算，一年通兩次信的窗口算
-- **內容涉及金錢、承諾、道歉、申請、或正式請求** —— 這幾類的共同點是**寄出後會被引用**。對方可能轉發、存檔、據以行動；寫錯的代價不是尷尬，是要另外發一封更難寫的信去更正
-- **草稿長度逾門檻** —— 長信的每一段都是新的出錯機會，而寫的人到後段已經看不見前段的問題
-
-**不提示的反例**：
-
-- 內部同事的隨手訊息（「資料放好了」「明天十點可以」）
-- 純轉發、代為傳話
-- 一兩句的確認回覆（「收到，謝謝」）
-
-這些信的共同點是**錯了改口的成本很低**，跑 ensemble 的成本高於它擋下的風險。
-
-> 判準寫在 facet 而非 core，因為「何謂正式信」是書信文類特有的。自傳、個人陳述等其他文類若要接複核，各自定義自己的觸發條件，不共用本節。
-
 ## Phase 5b: Output Format
 
 **CRITICAL: Never use markdown blockquote (`>`) for email/letter drafts.**
@@ -223,3 +203,34 @@ visual bars.
 This heuristic applies not just to `---` in markdown but to **every CSS border declaration**
 when generating HTML/PDF drafts (DMs, proposals, reports). Count rendered horizontal lines
 per page; pairs with nothing meaningful between them are the AI tell to fix.
+
+## Phase 5c 增補：何時提示 ensemble 複核
+
+core 的「Phase 5c: Ensemble Review (optional)」定義了偵測與降級語意，但把「何時觸發」留給文類決定。書信的判準如下。
+
+**本節在 Phase 5b 之後執行** —— 複核的對象是**已完成格式整理、準備寄出的那一版**。對半成品跑複核會把格式雜訊當成問題回報。
+
+### 判定順序（兩關，反例優先）
+
+**第一關 —— 反例 gate。任一命中就不提示，直接結束本節：**
+
+- 內部同事的隨手訊息（「資料放好了」「明天十點可以」）
+- 純轉發、代為傳話
+- 一兩句的確認回覆（「收到，謝謝」）—— **不論收件人是誰**
+
+這三類的共同點是**錯了改口的成本很低**，跑 ensemble 的成本高於它擋下的風險。
+
+**第二關 —— 觸發條件。通過第一關後，任一命中即提示：**
+
+- **收件人是機構或不熟識的對象** —— 學會、行政單位、期刊編輯、初次往來的合作者。判準不是對方的職級，是**你們之間有沒有既有的往來節奏**：每週開會的同事不算，一年通兩次信的窗口算
+- **內容涉及金錢、承諾、道歉、申請、或正式請求** —— 這幾類的共同點是**寄出後會被引用**。對方可能轉發、存檔、據以行動；寫錯的代價不是尷尬，是要另外發一封更難寫的信去更正
+
+> **為什麼反例優先**：兩關的判準會重疊 —— 寄給期刊編輯的一句「收到，謝謝」同時命中反例三與觸發條件一。若不定序，同一封信會得到相反指令。反例勝，因為它描述的是**這封信的實際份量**，而觸發條件描述的只是**收件人與主題的類別**；份量小的信不會因為收件人正式就變得值得複核。
+
+### 長度不是獨立的觸發條件
+
+長信的每一段都是新的出錯機會，寫的人到後段也看不見前段的問題 —— 但**長度本身不構成觸發**。一封三千字的內部技術說明不因為長就需要對外書信的複核；「僅對外正式信」是本 gate 的邊界，長度不能繞過它。
+
+長度的正確用法是**邊界情況的加權**：第二關判不出來、你在提不提示之間猶豫時，長草稿偏向提示、短草稿偏向不提示。
+
+> 判準寫在 facet 而非 core，因為「何謂正式信」是書信文類特有的。**本節只適用於準備寄出的正式書信**；其他文類不在本節範圍內。
