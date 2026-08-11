@@ -138,6 +138,7 @@ TaskCreate(name="phase1_understand_writer",        description="Phase 1: 讀 use
 TaskCreate(name="phase3_simulate",                 description="Phase 3: 寫出 simulation 段落再開始 draft")
 TaskCreate(name="phase4_write_draft",              description="Phase 4: 初稿（Voice matching；文類特有的格律見已載入的 facet）")
 TaskCreate(name="phase5_antipatterns_check",       description="Phase 5: 過 core 的 anti-pattern checklist；facet 若有增補列與輸出格式，一併套用")
+TaskCreate(name="phase5d_cross_model_polish",      description="Phase 5d: 跨模型潤稿 —— 走三層 ladder（外部模型 → 獨立 subagent → 照常交付），下達 frozen span 清單，回稿後逐條驗證（仍存在且出現次數不變），mismatch 即回退潤稿前草稿")
 TaskCreate(name="phase6_present_and_iterate",      description="Phase 6: 呈現草稿並解釋選擇，等 user 回饋；若編輯檔案 → delegate draft-learner (6b)")
 TaskCreate(name="phase7_persist_rules",            description="Phase 7: 徵詢後執行 persist 操作（見 references/rules-resolution.md 的 Named resolution contract）")
 ```
@@ -147,6 +148,27 @@ TaskCreate(name="phase7_persist_rules",            description="Phase 7: 徵詢�
 **為什麼強制**：Phase 1-3 是「理解」階段，很容易被跳過直接 Phase 4 寫 draft。強制 TaskList 讓 skip 變得明顯。另外 Phase 7（persist rules）常被忘記，TaskList 收尾時就會提醒還沒做。
 
 **注意**：Phase 5b 是 output format 的格式規範（用 `---` 不用 `>`），併進 `phase5_antipatterns_check`；Phase 6b 是偵測到檔案被改動時 delegate 到 `draft-learner` skill，不算獨立 phase，處理完回到 `phase6_present_and_iterate`。
+
+### 開場依賴提示（非阻斷）
+
+Bootstrap 完成後、進 Phase 0a 之前，對 Phase 5d 的潤稿依賴做一次偵測：
+
+```bash
+ls -d ~/.claude/plugins/cache/*/codex-pro          >/dev/null 2>&1   # 治理層
+ls -d ~/.claude/plugins/cache/*/parallel-ai-agents >/dev/null 2>&1   # 執行層
+```
+
+**兩者皆在** → **不輸出任何東西**。
+
+**任一缺席** → **印一行**，指名缺的是哪一個：
+
+> 未偵測到 `<缺席的 plugin>`。Phase 5d 的跨模型潤稿會降到第二層（獨立 subagent），草稿照常交付。想啟用第一層可安裝：`claude plugin install codex-pro@codex-pro`（治理層）／`parallel-ai-agents`（執行層）。
+
+**這是通知，不是提問。** 不等回答、不阻斷、不因此改變後續任何步驟 —— 與 Phase 5d 的「不得詢問使用者是否具備帳號或授權」同一條紀律：偵測得到的事實自己去看，看不到的不要問人。
+
+> **為什麼放開頭而不是放在 Phase 5d 降級當下**：安裝 plugin 通常需要 reload。在 Phase 5d 才講，草稿已經寫完了 —— 那個提示對這一次沒有用，只能幫到下一次。放開頭至少讓人有機會在起草前處理。
+>
+> **偵測失準無所謂**：目錄存在不等於 plugin 可用（殘留 cache、被停用）。這裡的偵測只決定「要不要印一行客套話」，假陽性的後果是少印一行，不影響任何行為 —— 真正的可用性判定在 Phase 5d 的 ladder，由實際呼叫失敗來決定。
 
 ---
 
@@ -335,7 +357,70 @@ ls -d ~/.claude/plugins/cache/*/parallel-ai-agents >/dev/null 2>&1
 ### 非目標
 
 - **不**在 `plugin.json` 宣告對 `parallel-ai-agents` 的依賴 —— 該 plugin 已在自己的 workflow 中反向引用本 skill，宣告依賴會形成循環
-- **不**要求 `codex-pro` —— 它在 `pai-ensemble` 內部本就是 optional，此處升格為必要屬過度約束
+- **不**要求 `codex-pro` —— 它在 `pai-ensemble` 內部本就是 optional，此處升格為必要屬過度約束。**本條的適用範圍限於 Phase 5c**：它禁止的是「把外部 plugin 升格為 ensemble 複核的**前置條件**」。Phase 5d 把同一個 plugin 當作**可降級的首選**（缺席即降第二層，最終仍照常交付），不構成前置條件，因此不違反本條。這條與上一條非目標其實是同一個理由的兩面 —— 避免把可選的外部 plugin 變成必要前置、避免形成循環；**兩條都不得因為 Phase 5d 的存在而被刪除**。
+- **不**阻斷主流程（見上方降級鐵律）
+
+## Phase 5d: Cross-model Polish
+
+Phase 5 是你自己對草稿的檢查；Phase 5c 是多視角的**複核**，產出的是問題清單。這一步是**改寫** —— 把草稿交給一個不是你的模型潤過，收回來，再驗證它有沒有動到不該動的東西。
+
+**使用者看到的第一版即為潤稿後版本。** Compose 與 Revise 兩個 mode 都適用，潤稿在 Phase 6 呈現之前完成。
+
+> **為什麼要另一個模型**：自審驗得了「我打算做的有沒有做到」，驗不了「做出來的東西自己有沒有問題」—— 後者正是作者看不見的那部分。本 repo #7 的四輪跨模型盲驗留下的對照事實：所有 blocking finding 全部出自跨模型驗證，作者自審每輪都報「完全符合」。
+
+### 三層 ladder（failure-driven）
+
+| 層 | 條件 | 行為 | 該層失敗時 |
+|---|---|---|---|
+| ① | 外部模型管道可呼叫且授權有效 | 送外部模型潤稿，來回確認至收斂 | 降 ② |
+| ② | ① 不可用（依賴缺席／授權失效／逾時） | 交給**獨立 subagent** 潤稿，走同樣的來回迴圈 | 降 ③ |
+| ③ | ② 亦不可用 | **照常交付未潤稿的草稿**，附一行說明潤稿未執行 | — |
+
+**不得詢問使用者是否具備外部服務的帳號或授權。** 授權狀態無法從本機狀態可靠推斷（裝了 plugin 不等於有授權，有授權不等於額度未盡），而該管道的授權失效本就是 fail-fast、不重試 —— 直接嘗試、由失敗觸發降級，比要使用者回答一個他未必知道答案的問題便宜。
+
+**降級鐵律（承襲 Phase 5c）**：三層各自都有明確出口通往「照常交付」。**永不阻斷交付。** 任何「因為缺依賴所以不給草稿」的行為都是違規 —— 沒有外部管道的使用者必須拿到與現況逐字相同的草稿，只是少一層潤稿。
+
+**第二層必須是獨立 subagent。同一 session 的第二次 pass 不成立** —— 由起草的同一個模型自己潤，「外部視角」這個本階段存在的理由就消失了，那只是把 Phase 5 再跑一次。
+
+### frozen span：潤稿可以改什麼、不可以改什麼
+
+外部模型**看不到** Phase 1–3 建立的聲音模型與事實錨點。「潤得通順」與「潤掉了具體指涉」在文本表面分辨不出來 —— 所以約束不能只是風格指示，必須是可機械驗證的義務。
+
+送出的請求含三部分：
+
+1. **待潤草稿**
+2. **frozen span 清單** —— 逐字字串，一行一條，涵蓋 Phase 1–3 錨定的事實敘述：**時間錨點、金額、經手人、流程細節、逐字引用**
+3. **風格指示** —— 節奏、贅字、句長、連接方式。**這是附加，不是主要約束**
+
+回稿後**逐一驗證每個 frozen span**：仍然存在，且出現次數不變。任一 mismatch → **回退到潤稿前的自家草稿**，並指名是哪一條 span 不符。回稿被接受後，另跑一次 Phase 5 的 anti-pattern checklist。
+
+> 這套機制不是新發明的 —— 本 skill 的消費者契約早就用同一個形狀要求外部呼叫端驗證我們的回傳（見 README 的 frozen-anchors 條款）。Phase 5d 只是角色對調：那裡本 skill 是被信任的改寫者，這裡本 skill 是驗證方。
+>
+> **為什麼不能只給風格指示**：沒有機械檢查時，通順但飄掉的回稿會靜默通過。這正是本 repo 已經寫明的失敗式 —— 文本品質不構成「校準確實發生過」的證據。
+
+### 收斂
+
+**收斂成立需同時滿足**：
+
+1. 回稿與前一輪的差異僅剩**不改變語意**的措辭層級
+2. frozen span 驗證通過
+3. **無新增事實主張**（與消費者契約的 no-new-claims 條款同源）
+
+**不設輪次上限。** 但**每一輪都要印出輪次與差異摘要** —— 對手是一個被要求提供改善建議、因此傾向持續提供建議的模型。沒有輪次可見性，不收斂就變成靜默累積的成本與延遲。
+
+### 依賴解析
+
+潤稿管道的治理值（模型、推理強度、逾時）**於執行時解析；本檔與本 repo 不寫任何模型名稱字面** —— 換代時只需上游改一處。
+
+**解析流程引用上游的 canonical 文件，不在此貼複本**：執行層與解析流程的 canonical 是 `parallel-ai-agents` 的 `references/codex-governance.md`（其「解析流程」段落），治理契約是 `codex-pro` 的 `references/profile-contract.md` 與 `references/defaults.json`。該 canonical 文件本身就是為「引用本檔，不內嵌分歧複本」而寫的 —— 在此複製一份只會多一個分頭老化的地方。
+
+依賴缺席或低於版本地板 → **降第二層**，並印一步安裝提示。**不 abort。**
+
+### 非目標
+
+- **不**在 `plugin.json` 宣告對上述任一 plugin 的依賴（理由同 Phase 5c 非目標第一條：會形成循環）
+- **不**在本 repo 內 vendor 任何外部執行檔 —— 既有前例顯示 vendored 版會落後上游數個修正
+- **不**適用於 calibrate mode —— 見下方 Calibrate-draft entry；消費者契約的具名 section 列舉已把本段歸為不適用
 - **不**阻斷主流程（見上方降級鐵律）
 
 ## Calibrate-draft entry (EXTERNAL-CONSUMER CONTRACT, 2.11.0+, #1)

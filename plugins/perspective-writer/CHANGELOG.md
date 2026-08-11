@@ -11,6 +11,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Phase 5d: Cross-model Polish** — a rewrite pass between Phase 5c and delivery. 5c
+  *reviews* and returns findings; 5d *rewrites* and returns text. It runs a three-tier
+  ladder (external model → independent subagent → plain delivery) in which **every tier
+  exits to a delivered draft**; the writer sees the polished version as their first draft
+  whenever a tier is available. The fallback tier must be an agent that did not write the
+  draft — a second pass by the drafting agent is not a second viewpoint, and the whole
+  reason for the step is the viewpoint.
+- **Frozen-span obligation for the polish pass.** The request carries a list of literal
+  spans covering the facts anchored during the understanding phases — time anchors,
+  amounts, named handlers, process details, verbatim quotes. The returned text is verified
+  span by span (still present, occurrence count unchanged) and rolled back to the
+  pre-polish draft on any mismatch. This is the mechanism the consumer contract already
+  requires of *its* callers, with the roles reversed: here the skill is the verifier, not
+  the trusted rewriter. Style guidance is additional to the obligation, never a
+  substitute — an external model cannot see the voice model or the anchors, and a
+  fluent-but-drifted return is indistinguishable from a good one by inspection.
+
+### Changed
+
+- **Consumer contract: the calibrate-mode section mapping now names *Cross-model Polish*
+  among the sections that do not apply.** This is an **additive clarification, not a
+  BREAKING change** — calibrate mode behaves exactly as before and no consumer relied on
+  anything that moved. The section is excluded for two mode-specific reasons: its exchange
+  emits round-by-round output that the return shape in promise 7 forbids, and there is no
+  human in that pass to read a polished result.
+- **Phase 5c's "`codex-pro` is never required" non-goal is now scoped to Phase 5c**, in
+  both the skill and the README. The clause itself is unchanged and was deliberately not
+  deleted. What it forbids is promoting an optional plugin into a *precondition* for the
+  ensemble re-check; Phase 5d treats the same plugins as a **degradable preference** —
+  absent either one the ladder drops a tier and the draft still ships — so it does not
+  violate the clause. Recording the scope prevents a future maintainer from resolving the
+  apparent contradiction by deleting the line, which would silently remove the guard
+  against declaring a circular plugin dependency.
+- **Polish governance is resolved at run time by reference.** Model, reasoning effort and
+  timeout come from the upstream governance contract at call time; this repository holds
+  no model-name literal, and the resolution procedure is cited rather than copied. The
+  upstream canonical document exists precisely so consumers do not embed divergent
+  copies — a third copy would only add another place to age out of sync.
+
 ## [4.2.0] - 2026-08-07
 
 ### Changed

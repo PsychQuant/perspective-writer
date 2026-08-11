@@ -27,13 +27,14 @@ Rules that no skill here reads — general writing style, code-comment style —
 
 ## Pre-send review vs. long-term learning
 
-Four of the pieces above look like they overlap — they don't. They sit on different time scales and use
+Five of the pieces above look like they overlap — they don't. They sit on different time scales and use
 different numbers of viewpoints:
 
 | | Time scale | Viewpoints | What it does |
 |---|---|---|---|
 | `draft-learner` · `role-calibrator` · `save-feedback` | **Long-term**, accumulating across sessions | One | Learn the writer's style from their edits and feedback; calibrate tone to the writer's standing in each domain |
 | Core **Phase 5c: Ensemble Review** | **Single letter**, just before it goes out | Many, mutually blind | Independently re-check *this* draft's facts, register, and action items |
+| Core **Phase 5d: Cross-model Polish** | **Single letter**, just before it goes out | One, but never the drafter | Rewrite *this* draft's prose without touching the facts it anchored |
 
 The learning skills make the *next* draft sound more like you. Phase 5c catches what is wrong with *this*
 one. A style model built from your past edits cannot tell you that a sentence is verifiably false to the
@@ -41,7 +42,17 @@ person receiving it — that needs a reader who is not you.
 
 Phase 5c is **optional and soft**. It looks for `parallel-ai-agents` at run time; when that plugin is
 absent it prints one line and delivers the draft unchanged. Nothing is declared in `plugin.json`, and
-`codex-pro` is never required (it is already optional inside `pai-ensemble` itself).
+`codex-pro` is never required *for Phase 5c* (it is already optional inside `pai-ensemble` itself). That
+qualification matters now that 5d exists — see the next paragraph.
+
+**Phase 5d** is the step after 5c and before delivery, and it is a different kind of step: 5c *reviews*
+and returns findings; 5d *rewrites* and returns text. It runs a three-tier ladder — an external model,
+then an independent subagent, then plain delivery — and **every tier exits to a delivered draft**. The
+request carries a list of frozen spans covering the facts anchored in the understanding phases; the
+returned text is verified span by span and rolled back to the pre-polish draft on any mismatch. Here
+`codex-pro` and `parallel-ai-agents` are a **degradable preference, never a precondition**: absent
+either one the ladder drops a tier and the draft still ships, byte-identical to what it would have been.
+Nothing is declared in `plugin.json` for 5d either.
 
 The relationship runs both ways, and is soft in both directions: `parallel-ai-agents` calls this skill to
 analyse writing style inside its `ensemble-academic-review`, and this skill offers `pai-ensemble` as a
@@ -97,7 +108,7 @@ DRAFT>>>
 
 **Behavior promises**:
 
-1. **Calibrate is a third mode** — distinct from the base skill's Compose and Revise. The base rule "Revise never skips the understanding phases" deliberately does NOT apply: the consumer already carries the anchored understanding and there is no human to interview mid-pass. Section mapping — **named, not numbered**, so it survives reordering. **This mode loads no genre facet**, so every facet section is out of scope. Core sections that do not apply: *Bootstrap Stage Task List*, *Determine the Genre and Load Its Facet*, *Present and Iterate*, *Learn from User Edits*, *Persist for Next Time*. *Understand the Writer* is skipped. From *Resolve the Subject's Rules*, **the lookup applies but the gate and the disclosure do not** — those two need a human and this pass has none; the lookup does not, and it is what produces the returned status. *Simulate, Don't Compose* runs internally; *Write* operates on the provided draft; *Anti-Patterns Checklist* runs.
+1. **Calibrate is a third mode** — distinct from the base skill's Compose and Revise. The base rule "Revise never skips the understanding phases" deliberately does NOT apply: the consumer already carries the anchored understanding and there is no human to interview mid-pass. Section mapping — **named, not numbered**, so it survives reordering. **This mode loads no genre facet**, so every facet section is out of scope. Core sections that do not apply: *Bootstrap Stage Task List*, *Determine the Genre and Load Its Facet*, *Cross-model Polish*, *Present and Iterate*, *Learn from User Edits*, *Persist for Next Time*. *Understand the Writer* is skipped. From *Resolve the Subject's Rules*, **the lookup applies but the gate and the disclosure do not** — those two need a human and this pass has none; the lookup does not, and it is what produces the returned status. *Simulate, Don't Compose* runs internally; *Write* operates on the provided draft; *Anti-Patterns Checklist* runs. *Cross-model Polish* is excluded for two reasons specific to this mode: its exchange emits round-by-round output that the return shape in promise 7 forbids, and there is no human here to read a polished result. Its exclusion is a clarification of scope, not a change to anything a consumer already relied on.
 2. **`recipient-rules` is optional, and omitting it is the recommended path (since 4.2.0).** A subject's rules are a `core.md` plus zero or more genre facets under a subject directory, and a legacy single-file path may hold a redirect placeholder — three sources with a defined order. **A consumer SHOULD NOT resolve that order itself.** Omit `recipient-rules` and the skill runs its own **resolve** against the required `recipient` field, covering every source and following placeholders.
 
    Supply `recipient-rules` only when you already hold a location for some other reason; the skill still reads it through **resolve**, so a placeholder is followed. A consumer that does reconstruct the canonical location MUST follow the contract's *Resolution order* rather than assume one file at one path — but the point of 4.2.0 is that it no longer has to.
