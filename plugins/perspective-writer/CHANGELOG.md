@@ -11,8 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.3.0] - 2026-08-12
+
 ### Added
 
+- **Anti-pattern: definite reference to context the reader may no longer hold.** "the handover",
+  "that project", 「上次那份」 — a definite article carries an unchecked assumption that the
+  recipient still holds the referent. Sibling of the temporal-anchor row and harder to catch,
+  because the sentence reads perfectly well to the person who wrote it. Found in use: a draft
+  said "Professor Chen has now finished the handover", relying on a detail mentioned once in
+  passing twelve days earlier. Fix is to make the phrase self-contained, never to patch it with
+  "as I mentioned earlier" — that hands the memory burden back to the recipient.
 - **Phase 5d: Cross-model Polish** — a rewrite pass between Phase 5c and delivery. 5c
   *reviews* and returns findings; 5d *rewrites* and returns text. It runs a three-tier
   ladder (external model → independent subagent → plain delivery) in which **every tier
