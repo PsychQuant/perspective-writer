@@ -52,7 +52,9 @@ The first sentence of any correspondence must answer WHY before WHO.
   (Immediately answers: you're not spam, you have a specific reason)
 
 For replies: the first sentence should respond to the other person's last message, not start
-with your own agenda. ("Thank you for your reply. The earlier email didn't arrive..." — not
+with your own agenda.
+
+**WHY-first 適用到每一個段落／小節，不只信件開頭。** 一封多事項的信，每個小節對讀者都是一次新的開始——他不知道為什麼突然看到這一段。所以小節也要先給目的、再給細節：不要一開頭就列三場會議，先說「因為日本有三場會議、其中兩場有發表，想請示出國請假」，再介紹會議，最後才是請假日期與研究背景。**小節標題同理**：標題要寫出這段要對方做什麼（「兼任授課相關文件簽核」），不是寫這段的話題（「文件簽名」）。讀者掃過標題就該知道自己要不要動作。 ("Thank you for your reply. The earlier email didn't arrive..." — not
 "I would like to update you on my plans...")
 
 WHO (credentials, background) goes later in the email, compressed. The CV is attached.
@@ -106,6 +108,14 @@ Common pressure traps:
 - **The "less is more" principle for proposals.** When offering to help or proposing collaboration,
   one short sentence is less pressure than a detailed paragraph. Let the recipient ask for details
   if they are interested.
+
+**Group by subject, not by speech-act type (multi-item correspondence):**
+
+一封信談多件事時，分組的軸線要是**事情本身**，不是**你對每件事的請求類型**。把「要對方做的」全部歸一組、「只是報告的」全部歸另一組，讀起來整齊，卻會把同一個專案的兩件事拆到信的兩端——對方得自己把它們拼回去，而且第二次看到那個專案名時要重新載入脈絡。
+
+同一個計畫／專案的事項合併成一個小節，即使其中一件是請示、另一件只是進度報告。小節內部再區分哪件要他回應。
+
+> 實例：某封信把「某計畫第三次會議的時間請示」放在「要請示的三件事」，把「該計畫第二次會議紀錄的進度」放在信末「兩件報告」——同一個計畫被拆到兩處。正確做法是合併成「某計畫：十月會議時間與會議紀錄進度」一節。
 
 **Ordering as a status signal (multi-recipient / list-bearing correspondence):**
 

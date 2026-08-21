@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.5.0] - 2026-08-21
+
+### Added
+
+- **Anti-pattern: presupposed approval**（core）。與 4.4.0 的 forward-reference 是同一缺陷的
+  兩種載體：那條是用**順序**預設同意，本條是用**語氣**（「我打算投稿」——對方還沒點頭，
+  已用直述句講成事實）。判準：這件事對方若說不，我這句會不會變成先斬後奏？
+- **WHY-first 適用到每一個小節**（email facet）。原本只規定信件開頭；多事項信的每個小節
+  對讀者都是新的開始，同樣要先給目的再給細節。小節標題要寫「這段要對方做什麼」而非話題。
+- **Group by subject, not by speech-act type**（email facet）。多事項信按「要對方做的 vs
+  只是報告的」分組會把同一專案的事拆到信的兩端；應按事情本身分組。
+
+
 ## [4.4.0] - 2026-08-21
 
 ### Added
