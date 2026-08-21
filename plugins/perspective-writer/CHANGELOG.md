@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.4.0] - 2026-08-21
+
+### Added
+
+- **Anti-pattern: forward reference.** 前段依賴後段才會交代的事實，或預設了後段還在請求的許可。
+  讀者是線性讀的；作者永遠看不出來，因為作者腦中整份文件是同時存在的。Sibling of the
+  definite-reference row added in 4.3.0 — 差別在缺的東西不是讀者的記憶，而是文件自己還沒
+  交代的後文。Found in use: 一封五事項的信把「文件簽名」排在「出國請假」之前，簽名那段寫
+  「因為 8 月 30 日就出發」——而那趟出國的核可正是下一段要請的，等於在問之前先把答案填好。
+  修法分兩級：一般前向指涉可改措辭；**若該資訊是後文正在請求核可的事，就升級成預設同意，
+  必須改順序。**
+
+
 ## [4.3.0] - 2026-08-12
 
 ### Added
