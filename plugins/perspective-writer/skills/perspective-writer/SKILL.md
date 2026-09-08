@@ -138,6 +138,7 @@ TaskCreate(name="phase1_understand_writer",        description="Phase 1: 讀 use
 TaskCreate(name="phase3_simulate",                 description="Phase 3: 寫出 simulation 段落再開始 draft")
 TaskCreate(name="phase4_write_draft",              description="Phase 4: 初稿（Voice matching；文類特有的格律見已載入的 facet）")
 TaskCreate(name="phase5_antipatterns_check",       description="Phase 5: 過 core 的 anti-pattern checklist；facet 若有增補列與輸出格式，一併套用")
+TaskCreate(name="phase5a_natural_voice_pass",      description="Phase 5a: 讀 human-writing 的 natural-writing-checklist.md，逐條確認五項：簡單動詞／句長跟思路且允許重複／轉折詞只在需要時／無為像人而造的錯字軼事／收尾不重述不加對提問者的話。任一項不成立就改，改完才 completed")
 TaskCreate(name="phase5d_cross_model_polish",      description="Phase 5d: 跨模型潤稿 —— 走三層 ladder（外部模型 → 獨立 subagent → 照常交付），下達 frozen span 清單，回稿後逐條驗證（仍存在且出現次數不變），mismatch 即回退潤稿前草稿")
 TaskCreate(name="phase6_present_and_iterate",      description="Phase 6: 呈現草稿並解釋選擇，等 user 回饋；若編輯檔案 → delegate draft-learner (6b)")
 TaskCreate(name="phase7_persist_rules",            description="Phase 7: 徵詢後執行 persist 操作（見 references/rules-resolution.md 的 Named resolution contract）")
@@ -146,6 +147,8 @@ TaskCreate(name="phase7_persist_rules",            description="Phase 7: 徵詢�
 完成每一個 phase 立即 `TaskUpdate → completed`。**靜默完成 = 違規**。
 
 **為什麼強制**：Phase 1-3 是「理解」階段，很容易被跳過直接 Phase 4 寫 draft。強制 TaskList 讓 skip 變得明顯。另外 Phase 7（persist rules）常被忘記，TaskList 收尾時就會提醒還沒做。
+
+**5a 的五項不是「看過就算」**：每一項要在草稿裡找得到對應的檢查動作（例如「句長跟思路」是實際掃相鄰句長、「允許重複」是確認沒有為避重複而換的同義詞）。五項都成立才把 task 標 completed；有一項不成立就先改，這是 checklist 進 TaskCreate 的理由（2026-09-09 使用者要求）。
 
 **注意**：Phase 5b 是 output format 的格式規範（用 `---` 不用 `>`），併進 `phase5_antipatterns_check`；Phase 6b 是偵測到檔案被改動時 delegate 到 `draft-learner` skill，不算獨立 phase，處理完回到 `phase6_present_and_iterate`。
 
@@ -314,6 +317,31 @@ Before presenting the draft, check for these AI writing tells and remove every i
 | Arrow symbols (`→` / `$\rightarrow$`) in prose to show direction, change, or causality | Fine in slides or notes, but in formal prose the reader has to "sound it out", and the arrow is ambiguous (sequence? causality? numeric change? lead-lag direction?). A clear AI tell in academic/report writing. | Spell it out in words: "期貨領先現貨之方向", "由 0.81 上升至 0.89", "X 導致 Y". Keep arrows only inside math mode, equations, or actual diagrams. |
 | "新增" / "新加" / "另新增" framing in a one-piece document | In a finished document every part is integral. "第四章新增之…" / "本研究新增了…" exposes multi-pass assembly and reads as patched-together — the reader is not supposed to see the seams. | Drop the "新增" frame: "第四章新增之 X" → "第四章之 X" / "本研究之 X". State what the section *is*, not when it was bolted on. |
 | **外歸因推卸**（解釋遲交／失誤時把主因推給流程或別人：「因為 GBA 代碼還沒好」「因為某流程慢」「因為經費還沒確認」）| 即使屬實，外歸因讀起來像卸責、推給制度或他人，語用上顯得不負責——在道歉／說明遲交的信裡最傷信任。「找一個更有說服力的外部理由」不會讓它不像推，只會更像。 | 內歸因、承擔：主因寫成自己的責任（「我剛到職、首次辦理、對送件時程不熟、未能及早啟動」）；外部因素只當次要、輕帶過、不當擋箭牌；結尾收在自己身上（「這主要是我規劃上的不足，往後會提早準備」）。誠實 acknowledge 但不過度自貶。要不像「推」，是把責任接回自己，不是換一個外部理由。 |
+
+## Phase 5a: Natural-voice pass（引用 human-writing，不複製）
+
+Phase 5 列的是**不要寫什麼**。這一步補**要怎麼寫**，來源是 OpenAI curated 的 `human-writing` skill（本機路徑
+`~/.codex/plugins/cache/openai-curated-remote/humanwriting/<version>/skills/human-writing/`，
+2026-09-09 版本 1.0.0）。它的 `references/natural-writing-checklist.md` 改編自 Wikipedia
+「Signs of AI writing」（CC BY-SA 4.0），是描述性的 field guide，不是禁字表。**讀那份檔案，不在這裡抄一份**：
+它跟著 codex plugin 更新，複本會分頭老化。
+
+跟本 skill 的分工：T-schema 管句子**指到什麼**（Phase 1–4），Phase 5 管**黑名單**，5a 管**句子的手感**。
+三者不重疊，都要過。
+
+5a 的五條核心，順序照它的 workflow：
+
+1. **簡單動詞優先**。「是」「有」「寫了」「用了」說得準就用，不換「作為」「具備」「撰寫」「採用」。
+2. **句長跟著思路走**，不機械地長短交替；允許有用的重複，不為了避重複換同義詞（elegant variation 是 AI 訊號）。
+3. **轉折詞只在關係需要說明時用**；不製造平衡、不補一個泛泛的反面。
+4. **不為了像人而造假**：不加錯字、不編軼事或情緒、不加隨機的破碎句。那些是偽裝，不是聲音。
+5. **收尾停在內容停的地方**：不重述大綱、不加「總之」、不加給提問者的話（「希望有幫助」「要不要我再…」）。
+
+它的 final read 五題（像不像一個人對這個讀者說話／最強的句子是具體還是膨脹／有沒有一句在解釋事實已經說明的事／
+格式有沒有在幫內容／有沒有保住意思與事實）在 Phase 5d 潤稿回稿後再問一次。
+
+**這一步在 Phase 5 之後、5d 之前。** 它處理的是 5d 外部模型看不到的東西：那個模型只拿到草稿與 frozen span，
+不知道哪些重複是刻意的。
 
 ## Phase 5c: Ensemble Review (optional)
 
