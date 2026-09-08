@@ -138,7 +138,7 @@ TaskCreate(name="phase1_understand_writer",        description="Phase 1: 讀 use
 TaskCreate(name="phase3_simulate",                 description="Phase 3: 寫出 simulation 段落再開始 draft")
 TaskCreate(name="phase4_write_draft",              description="Phase 4: 初稿（Voice matching；文類特有的格律見已載入的 facet）")
 TaskCreate(name="phase5_antipatterns_check",       description="Phase 5: 過 core 的 anti-pattern checklist；facet 若有增補列與輸出格式，一併套用")
-TaskCreate(name="phase5a_natural_voice_pass",      description="Phase 5a: 讀 human-writing 的 natural-writing-checklist.md，逐條確認五項：簡單動詞／句長跟思路且允許重複／轉折詞只在需要時／無為像人而造的錯字軼事／收尾不重述不加對提問者的話。任一項不成立就改，改完才 completed")
+TaskCreate(name="phase5a_natural_voice_pass",      description="Phase 5a: 讀本 skill references/natural-writing-checklist.md，逐條確認五項：簡單動詞／句長跟思路且允許重複／轉折詞只在需要時／無為像人而造的錯字軼事／收尾不重述不加對提問者的話。任一項不成立就改，改完才 completed")
 TaskCreate(name="phase5d_cross_model_polish",      description="Phase 5d: 跨模型潤稿 —— 走三層 ladder（外部模型 → 獨立 subagent → 照常交付），下達 frozen span 清單，回稿後逐條驗證（仍存在且出現次數不變），mismatch 即回退潤稿前草稿")
 TaskCreate(name="phase6_present_and_iterate",      description="Phase 6: 呈現草稿並解釋選擇，等 user 回饋；若編輯檔案 → delegate draft-learner (6b)")
 TaskCreate(name="phase7_persist_rules",            description="Phase 7: 徵詢後執行 persist 操作（見 references/rules-resolution.md 的 Named resolution contract）")
@@ -320,11 +320,10 @@ Before presenting the draft, check for these AI writing tells and remove every i
 
 ## Phase 5a: Natural-voice pass（引用 human-writing，不複製）
 
-Phase 5 列的是**不要寫什麼**。這一步補**要怎麼寫**，來源是 OpenAI curated 的 `human-writing` skill（本機路徑
-`~/.codex/plugins/cache/openai-curated-remote/humanwriting/<version>/skills/human-writing/`，
-2026-09-09 版本 1.0.0）。它的 `references/natural-writing-checklist.md` 改編自 Wikipedia
-「Signs of AI writing」（CC BY-SA 4.0），是描述性的 field guide，不是禁字表。**讀那份檔案，不在這裡抄一份**：
-它跟著 codex plugin 更新，複本會分頭老化。
+Phase 5 列的是**不要寫什麼**。這一步補**要怎麼寫**，來源是 OpenAI curated 的 `human-writing` skill（codex plugin `humanwriting` 1.0.0）。它的 checklist 改編自 Wikipedia
+「Signs of AI writing」（CC BY-SA 4.0），是描述性的 field guide，不是禁字表。**讀本 plugin 的
+[`references/natural-writing-checklist.md`](references/natural-writing-checklist.md)**：那是 2026-09-09 抄進來的複本，
+因為 codex 的 plugin cache 不隨本 plugin 發布；檔頭記了上游版本，上游更新時重抄。
 
 跟本 skill 的分工：T-schema 管句子**指到什麼**（Phase 1–4），Phase 5 管**黑名單**，5a 管**句子的手感**。
 三者不重疊，都要過。
