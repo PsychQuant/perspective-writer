@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [Unreleased]
+
+## [4.6.0] - 2026-09-09
+
+### Added
+- **Phase 5a: Natural-voice pass**（#15）。Phase 5 是黑名單，5a 補正面規範：簡單動詞、句長跟思路且允許重複、轉折詞只在需要時、不為像人而造假、收尾不重述。放在 5d 之前，因為外部潤稿模型分不出哪些重複是刻意的。
+- `references/natural-writing-checklist.md`：自 OpenAI curated `humanwriting` 1.0.0 複製（上游改編自 Wikipedia「Signs of AI writing」，CC BY-SA 4.0），檔頭記來源與日期；不依賴 codex plugin cache。
+- Phase 0 bootstrap 的 TaskCreate 清單新增 `phase5a_natural_voice_pass`，五項逐條確認成立才 completed。
+
 ## [4.5.0] - 2026-08-21
 
 ### Added
