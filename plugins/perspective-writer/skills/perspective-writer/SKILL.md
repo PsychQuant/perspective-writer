@@ -140,6 +140,7 @@ TaskCreate(name="phase4_write_draft",              description="Phase 4: 初稿�
 TaskCreate(name="phase5_antipatterns_check",       description="Phase 5: 過 core 的 anti-pattern checklist；facet 若有增補列與輸出格式，一併套用")
 TaskCreate(name="phase5a_natural_voice_pass",      description="Phase 5a: 讀本 skill references/natural-writing-checklist.md，逐條確認五項：簡單動詞／句長跟思路且允許重複／轉折詞只在需要時／無為像人而造的錯字軼事／收尾不重述不加對提問者的話。任一項不成立就改，改完才 completed")
 TaskCreate(name="phase5d_cross_model_polish",      description="Phase 5d: 跨模型潤稿 —— 走三層 ladder（外部模型 → 獨立 subagent → 照常交付），下達 frozen span 清單，回稿後逐條驗證（仍存在且出現次數不變），mismatch 即回退潤稿前草稿")
+TaskCreate(name="phase5e_native_syntax_read",      description="Phase 5e: 派同家族獨立 subagent 當語序讀者，只給文字＋語言標記＋起點清單（不給草稿、來源、聲音模型、收件人脈絡、使用者指示）；讀者只標記不改稿，採用的改寫須過 frozen span 驗證；派不出／失敗／逾時／格式不符即照常交付並附一行說明；Phase 6 修改輪只重讀改動句與前後各一句")
 TaskCreate(name="phase6_present_and_iterate",      description="Phase 6: 呈現草稿並解釋選擇，等 user 回饋；若編輯檔案 → delegate draft-learner (6b)")
 TaskCreate(name="phase7_persist_rules",            description="Phase 7: 徵詢後執行 persist 操作（見 references/rules-resolution.md 的 Named resolution contract）")
 ```
@@ -454,6 +455,68 @@ Phase 5 是你自己對草稿的檢查；Phase 5c 是多視角的**複核**，�
 - **不**適用於 calibrate mode —— 見下方 Calibrate-draft entry；消費者契約的具名 section 列舉已把本段歸為不適用
 - **不**阻斷主流程（見上方降級鐵律）
 
+## Phase 5e: Native-syntax Read
+
+5d 之後、Phase 6 呈現之前，把要交付的文字交給一個**不知道句子來源的讀者**讀一次，標出語序不像產出語言母語者會寫的句子。**Compose 與 Revise 一律執行**，Phase 6 每一輪修改後也執行（讀取範圍見 Phase 6）。沒有觸發開關，facet 不分擔開關。排在 5d 之後，是因為 5d 由外部模型改寫，改寫本身也可能帶進直譯句構；讀者要讀的是使用者實際會看到的那一版。
+
+> **為什麼要另一個讀者，而且不給它脈絡**（#17）：直譯句構來自起草時腦中的另一種語言的命題結構，這正是作者看不見的部分。作者回頭讀，會因為看懂意思而放過怪語序。5a 是作者自審；5d 知道脈絡而且會改寫；兩者都不是盲讀者。
+
+**判準是產出本身所用的語言**：信用繁體中文寫，就照繁體中文的語序判斷，不看收件人在哪裡。句子裡夾英文術語，不代表那句是英文。
+
+### 讀者
+
+由起草的 agent 派一個**獨立 subagent**，同模型家族即可。同一 session 由起草的 agent 自己再讀一遍不算數，理由同 5d 第二層。
+
+**只給三樣**：
+
+1. 要讀的文字：第一次呈現是全文；Phase 6 修改輪是那裡定義的讀取範圍
+2. 語言標記，例如 `zh-Hant`
+3. 該語言的起點清單全文，若存在。繁體中文是 [`references/zh-Hant-syntax-checkpoints.md`](references/zh-Hant-syntax-checkpoints.md)。其他語言目前沒有清單，照常執行，只憑母語語序判斷
+
+**不得給**：草稿或前一版、其他語言的來源、Phase 1–3 的聲音模型、收件人脈絡、使用者的指示。讀者一旦知道句子想說什麼，就會像作者一樣放過它。
+
+讀者指示（`<語言>` 換成語言名稱，連同文字與清單一起交給 subagent）：
+
+```
+你是以<語言>寫作的母語讀者。下面是一段要交付的文字。你不知道它是誰寫的、根據什麼材料、要給誰看，這是刻意的。
+
+請逐句讀，只找一件事：語序不像<語言>母語寫作者會寫的句子，例如把另一種語言的句構逐字換過來。用字、語氣、內容對錯都不在你的範圍。
+
+附上的檢查點清單是起點，不是全部。清單上的句型出現了，但放在這一句裡讀起來自然，就不標；不在清單上，但讀起來明顯不順，照樣標。清單反例表裡的句子不要標。只標母語者一讀就覺得不順的句子，勉強可以接受的不標。
+
+不要改寫整段，也不要回傳改過的全文。每標一句，用這個格式：
+
+- 原句：<逐字>
+  原因：<起點清單條目名稱，或「母語語感」＋一句說明>
+  建議：<母語改寫>
+
+沒有要標的句子，只回一行：無
+```
+
+### 採納
+
+讀者**只標記，不改稿**。起草的 agent 逐筆決定採用或不採用：
+
+- 採用的改寫要通過 5d 的 frozen span 驗證：每個 frozen span 仍然存在，且出現次數不變。不通過就不採用。
+- Phase 6 呈現時附一行摘要「語序讀者標了 N 句，採用 M 句」，再逐句列出**未採用**的標記（原句與原因），讓使用者可以推翻。沒有標記時寫「語序讀者：無」。
+
+### 降級
+
+以下四種情形，照常交付，並在 Phase 6 呈現時附一行「（語序檢查未執行：<原因>）」：
+
+1. 派不出 subagent
+2. subagent 執行失敗
+3. 逾時
+4. 回傳不符上方格式
+
+**不重試、不詢問使用者、永不阻斷交付**（降級鐵律同 5c、5d）。
+
+### 非目標
+
+- **不**適用於 calibrate mode —— 見下方 Calibrate-draft entry；消費者契約的具名 section 列舉已把本段歸為不適用
+- **不**檢查用字、語氣、事實，那些由 Phase 5、5a、5c、5d 負責
+- **不**處理術語中英混用（#18）
+
 ## Calibrate-draft entry (EXTERNAL-CONSUMER CONTRACT, 2.11.0+, #1)
 
 When the invocation args contain a `CALIBRATE-DRAFT REQUEST v1` block, you were
@@ -478,8 +541,9 @@ there is no human to interview mid-pass.
   instead. `recipient-rules` is what feeds recipient context in this mode.
 - **Core sections that do NOT apply** (named, not numbered — this mapping must
   survive reordering): *Bootstrap Stage Task List* (single programmatic pass — no
-  stage task list), *Determine the Genre and Load Its Facet*, *Present and Iterate*,
-  *Learn from User Edits*, and *Persist for Next Time*.
+  stage task list), *Determine the Genre and Load Its Facet*, *Native-syntax Read*
+  (its flags need a human to adjudicate and the return shape has no place for them),
+  *Present and Iterate*, *Learn from User Edits*, and *Persist for Next Time*.
 - ***Understand the Writer* is SKIPPED** — do not interview.
 - **Recipient context comes from `recipient-rules`, or from `recipient` when that
   field is absent.**
@@ -527,6 +591,27 @@ Show the draft to the user. Don't just dump it. Explain:
 
 If the user says the tone is wrong, don't just adjust surface-level wording.
 Go back to Phase 1 and ask what you got wrong about their internal state.
+
+### 修改輪：再次呈現前重跑 Phase 5e
+
+每一輪修改後、再次呈現之前，執行 Phase 5e，但只讀下面定義的範圍，不整份重讀。
+
+1. **切句**：以句末標點（。！？；以及後面接空白的 . ! ?）和換行切句。
+2. **改動句**：新版本中的一句，如果在「上一次呈現給使用者的版本」裡找不到逐字相同的句子，就是改動句。
+3. **讀取範圍**：所有改動句，加上每個改動句在新版本中的前一句與後一句。範圍相鄰或重疊時合併，同一句不重複讀。
+4. **第一次呈現**沒有上一版，Phase 5e 讀全文。
+
+| 上一次呈現 | 新版本 | 讀取範圍 |
+|---|---|---|
+| A。B。C。D。 | A。B。X。C。D。 | B。X。C。 |
+| A。B。C。D。 | A。B2。C。D2。 | A。B2。C。D2。（兩段範圍合併） |
+| （無，第一次呈現） | A。B。C。 | A。B。C。 |
+
+呈現時照 Phase 5e 的規定附上讀者摘要，或附上「語序檢查未執行」那一行。
+
+> **為什麼**（#17）：問題句不在初稿裡，是在修改時才加進去的，而當時 Phase 6 沒有規定修改後要重跑任何檢查。只在初稿流程上檢查，最後交付的版本裡，越晚加入的句子反而越沒被看過。
+>
+> 本節的「改動句」定義供 #19 沿用。#19 處理 Phase 5、5a、5d 在修改輪是否重跑；本節只規定 Phase 5e。
 
 ## Phase 6b: Learn from User Edits
 

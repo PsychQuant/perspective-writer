@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.7.0] - 2026-10-01
+
+### Added
+- **Phase 5e: Native-syntax Read**（#17）。5d 之後、Phase 6 呈現之前，派一個同家族的獨立 subagent 當讀者，只給它交付文字、語言標記與該語言的起點清單，不給草稿、來源或收件人脈絡；讀者逐句標出語序不像產出語言母語者會寫的句子，只標記、不改稿。採用的改寫須過 5d 的 frozen span 驗證；派不出讀者時照常交付並附一行說明。
+- Phase 6 修改輪：每輪修改後、再次呈現前，對「改動句」加前後各一句重跑 5e（定義見 Phase 6，供 #19 沿用）。起因是 #17 的問題句是在修改時才加入，沒有經過任何檢查。
+- `references/zh-Hant-syntax-checkpoints.md`：繁體中文起點清單，第一條「整個子句當主語，再接『是…的』」附 #17 實例；反例表列出使用者判為可接受、讀者不該標的句子。
+- Phase 0 bootstrap 的 TaskCreate 清單新增 `phase5e_native_syntax_read`。
+
+### Changed
+- EXTERNAL-CONSUMER CONTRACT 的 calibrate 不適用列舉加入 *Native-syntax Read*（範圍說明，契約維持 v2）：經由 calibrate 產生的草稿不經語序檢查。
+- Phase 5a 加第 6 項「每句先問讀者需不需要知道」（`0403bbb`，4.6.0 之後提交，先前未記入本檔）。
+
 ## [4.6.0] - 2026-09-09
 
 ### Added
