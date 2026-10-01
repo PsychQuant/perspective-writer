@@ -27,7 +27,7 @@ Rules that no skill here reads — general writing style, code-comment style —
 
 ## Pre-send review vs. long-term learning
 
-Five of the pieces above look like they overlap — they don't. They sit on different time scales and use
+Six of the pieces above look like they overlap — they don't. They sit on different time scales and use
 different numbers of viewpoints:
 
 | | Time scale | Viewpoints | What it does |
@@ -35,6 +35,7 @@ different numbers of viewpoints:
 | `draft-learner` · `role-calibrator` · `save-feedback` | **Long-term**, accumulating across sessions | One | Learn the writer's style from their edits and feedback; calibrate tone to the writer's standing in each domain |
 | Core **Phase 5c: Ensemble Review** | **Single letter**, just before it goes out | Many, mutually blind | Independently re-check *this* draft's facts, register, and action items |
 | Core **Phase 5d: Cross-model Polish** | **Single letter**, just before it goes out | One, but never the drafter | Rewrite *this* draft's prose without touching the facts it anchored |
+| Core **Phase 5e: Native-syntax Read** | **Single letter**, just before it goes out | One, never the drafter, and blind to where the text came from | Flag sentences whose word order a native writer of the output language would not produce; never rewrites |
 
 The learning skills make the *next* draft sound more like you. Phase 5c catches what is wrong with *this*
 one. A style model built from your past edits cannot tell you that a sentence is verifiably false to the
@@ -53,6 +54,17 @@ returned text is verified span by span and rolled back to the pre-polish draft o
 `codex-pro` and `parallel-ai-agents` are a **degradable preference, never a precondition**: absent
 either one the ladder drops a tier and the draft still ships, byte-identical to what it would have been.
 Nothing is declared in `plugin.json` for 5d either.
+
+**Phase 5e** comes after 5d and reads the text the user will actually see. 5d knows the context and
+rewrites; 5e is deliberately blind and only flags. Its reader is an independent subagent that receives
+the text, its language tag, and the checkpoint list for that language (for Traditional Chinese,
+`references/zh-Hant-syntax-checkpoints.md`, which also lists counter-examples the reader must not flag) —
+no drafts, no source material, no recipient context. The drafting agent decides which suggestions to
+adopt, and an adopted rewrite must pass the same frozen-span verification as 5d. 5e also runs after every
+revision round in Phase 6, on the changed sentences plus one neighbour on each side, because a sentence
+added during revision otherwise reaches the user without passing any check (#17). When no reader can be
+dispatched, the draft ships unchanged with one line saying the read did not run. Nothing is declared in
+`plugin.json` for 5e.
 
 The relationship runs both ways, and is soft in both directions: `parallel-ai-agents` calls this skill to
 analyse writing style inside its `ensemble-academic-review`, and this skill offers `pai-ensemble` as a
@@ -108,7 +120,7 @@ DRAFT>>>
 
 **Behavior promises**:
 
-1. **Calibrate is a third mode** — distinct from the base skill's Compose and Revise. The base rule "Revise never skips the understanding phases" deliberately does NOT apply: the consumer already carries the anchored understanding and there is no human to interview mid-pass. Section mapping — **named, not numbered**, so it survives reordering. **This mode loads no genre facet**, so every facet section is out of scope. Core sections that do not apply: *Bootstrap Stage Task List*, *Determine the Genre and Load Its Facet*, *Cross-model Polish*, *Present and Iterate*, *Learn from User Edits*, *Persist for Next Time*. *Understand the Writer* is skipped. From *Resolve the Subject's Rules*, **the lookup applies but the gate and the disclosure do not** — those two need a human and this pass has none; the lookup does not, and it is what produces the returned status. *Simulate, Don't Compose* runs internally; *Write* operates on the provided draft; *Anti-Patterns Checklist* runs. *Cross-model Polish* is excluded for two reasons specific to this mode: its exchange emits round-by-round output that the return shape in promise 7 forbids, and there is no human here to read a polished result. Its exclusion is a clarification of scope, not a change to anything a consumer already relied on.
+1. **Calibrate is a third mode** — distinct from the base skill's Compose and Revise. The base rule "Revise never skips the understanding phases" deliberately does NOT apply: the consumer already carries the anchored understanding and there is no human to interview mid-pass. Section mapping — **named, not numbered**, so it survives reordering. **This mode loads no genre facet**, so every facet section is out of scope. Core sections that do not apply: *Bootstrap Stage Task List*, *Determine the Genre and Load Its Facet*, *Cross-model Polish*, *Native-syntax Read*, *Present and Iterate*, *Learn from User Edits*, *Persist for Next Time*. *Understand the Writer* is skipped. From *Resolve the Subject's Rules*, **the lookup applies but the gate and the disclosure do not** — those two need a human and this pass has none; the lookup does not, and it is what produces the returned status. *Simulate, Don't Compose* runs internally; *Write* operates on the provided draft; *Anti-Patterns Checklist* runs. *Cross-model Polish* is excluded for two reasons specific to this mode: its exchange emits round-by-round output that the return shape in promise 7 forbids, and there is no human here to read a polished result. Its exclusion is a clarification of scope, not a change to anything a consumer already relied on. *Native-syntax Read* is excluded for the same two reasons: its reader returns per-sentence flags meant for a human to adjudicate, which the return shape in promise 7 has no place for, and there is no human here to adjudicate them. The cost is stated plainly: a draft produced through calibration is not read for native syntax. This exclusion is likewise a clarification of scope.
 2. **`recipient-rules` is optional, and omitting it is the recommended path (since 4.2.0).** A subject's rules are a `core.md` plus zero or more genre facets under a subject directory, and a legacy single-file path may hold a redirect placeholder — three sources with a defined order. **A consumer SHOULD NOT resolve that order itself.** Omit `recipient-rules` and the skill runs its own **resolve** against the required `recipient` field, covering every source and following placeholders.
 
    Supply `recipient-rules` only when you already hold a location for some other reason; the skill still reads it through **resolve**, so a placeholder is followed. A consumer that does reconstruct the canonical location MUST follow the contract's *Resolution order* rather than assume one file at one path — but the point of 4.2.0 is that it no longer has to.
