@@ -138,6 +138,7 @@ TaskCreate(name="phase1_understand_writer",        description="Phase 1: 讀 use
 TaskCreate(name="phase3_simulate",                 description="Phase 3: 寫出 simulation 段落再開始 draft")
 TaskCreate(name="phase4_write_draft",              description="Phase 4: 初稿（Voice matching；文類特有的格律見已載入的 facet）")
 TaskCreate(name="phase5_antipatterns_check",       description="Phase 5: 過 core 的 anti-pattern checklist；facet 若有增補列與輸出格式，一併套用")
+TaskCreate(name="phase5_subject_rules_audit",      description="Phase 5 增補: 規則檔逐條對照 —— 派獨立 subagent，給它 resolve 回傳的規則檔全文與草稿，找出草稿違反的條目；起草者逐條決定改或不改，不改的列在 Phase 6；派不出則由起草者自己把規則檔條目逐條列出命中／未命中／不適用，不跳過這一步")
 TaskCreate(name="phase5a_natural_voice_pass",      description="Phase 5a: 讀本 skill references/natural-writing-checklist.md，逐條確認五項：簡單動詞／句長跟思路且允許重複／轉折詞只在需要時／無為像人而造的錯字軼事／收尾不重述不加對提問者的話。任一項不成立就改，改完才 completed")
 TaskCreate(name="phase5d_cross_model_polish",      description="Phase 5d: 跨模型潤稿 —— 走三層 ladder（外部模型 → 獨立 subagent → 照常交付），下達 frozen span 清單，回稿後逐條驗證（仍存在且出現次數不變），mismatch 即回退潤稿前草稿")
 TaskCreate(name="phase5e_native_syntax_read",      description="Phase 5e: 派同家族獨立 subagent 當語序讀者，只給文字＋語言標記＋起點清單（不給草稿、來源、聲音模型、收件人脈絡、使用者指示）；讀者只標記不改稿，採用的改寫須過 frozen span 驗證；派不出／失敗／逾時／格式不符即照常交付並附一行說明；Phase 6 修改輪只重讀改動句與前後各一句")
@@ -313,13 +314,49 @@ Before presenting the draft, check for these AI writing tells and remove every i
 | Vague temporal phrasing without verified anchor ("recently", "前幾天", "上次", "earlier") | If the writer hasn't told you the specific date, AI defaults to "前幾天" / "recently" — but the recipient knows when things actually happened and will notice the mismatch. Pure AI tell. | Ask the writer for the specific date. Replace "前幾天" with "上週四" or "5/8 在 storyline 會議時" — anchored phrasings carry the same warmth without the AI smell. |
 | Definite reference to context the reader may no longer hold ("the handover", "that project", "上次那份", "那個案子") | T-schema checks whether a sentence *has* a referent. A definite article smuggles in a second, unchecked assumption: that the recipient still holds it. You have just re-read the whole thread; they remember only what mattered to them at the time, and a detail you mentioned once in passing is not it. Same failure as the row above — the referent sits in the writer's head, not the reader's — but harder to catch, because the sentence reads perfectly well to the person who wrote it. | Make it self-contained: "the handover" → "the handover of his duties as Secretary-General of Academia Sinica". Do NOT patch it with "as I mentioned earlier" / 「如前信所述」 — that hands the memory burden back to the recipient and makes them feel they should have remembered. If the thing already has a wording in the prior correspondence, reuse that exact wording; one title in two translations reads as two different things. |
 | **Forward reference** — 前段依賴後段才會交代的事實，或預設了後段還在請求的許可 | 讀者是**線性**讀的：讀到「因為 8 月 30 日就出發」時，他還不知道有這趟出國。更糟的是，出發這件事的許可**正是後面那段要請的** —— 等於在問之前先把答案填好。作者永遠看不出來，因為作者腦中整份文件是**同時**存在的；只有從頭讀一遍的人會踩到。與上一列同源（指涉不在讀者手上），差別在缺的東西不是讀者的記憶，而是**文件自己還沒交代的後文**。 | 兩條路：把理由換成**前文已經建立**的東西，或把該段移到提供脈絡的段落之後。**判準：從開頭讀到這一句為止，讀者手上有沒有這個資訊？** 若那個資訊是後文正在請求核可的事，順序問題就升級成**預設同意**，必須改順序，不能只改措辭。 |
-| **Presupposed approval** — 把還在請示、尚未獲准的事寫成已定案 | 與上一列同一個缺陷，**不同載體**：上一列是用**順序**預設同意（理由寫在請求之前），本列是用**語氣**預設同意（「我打算投稿」「預計九月出發」——對方還沒點頭，你已經用直述句把它講成事實）。收件人讀到的是「你在通知我」，不是「你在問我」，而他手上其實還握著否決權。作者不易察覺，因為自己心裡確實已經打算那樣做——**打算是真的，獲准不是**。 | 把語氣退回請示：「我打算投稿 X」→「想請示老師是否可以參加並投稿」；後續動作改成條件句：「摘要下週一寄給老師」→「**如果老師同意**，我預計下週一將摘要寄給老師」。**判準：這件事對方若說不，我這句話會不會變成已經先斬後奏？** 會，就要改成請示語氣。 |
+| **Presupposed approval** — 把還在請示、尚未獲准的事寫成已定案 | 與上一列同一個缺陷，**不同載體**：上一列是用**順序**預設同意（理由寫在請求之前），本列是用**語氣**預設同意（「我打算投稿」「預計九月出發」——對方還沒點頭，你已經用直述句把它講成事實）。收件人讀到的是「你在通知我」，不是「你在問我」，而他手上其實還握著否決權。作者不易察覺，因為自己心裡確實已經打算那樣做——**打算是真的，獲准不是**。 | 把語氣退回請示：「我打算投稿 X」→「想請示老師是否可以參加並投稿」；後續動作改成條件句：「摘要下週一寄給老師」→「**如果老師同意**，我預計下週一將摘要寄給老師」。**判準：這件事對方若說不，我這句話會不會變成已經先斬後奏？** 會，就要改成請示語氣。**問句也會預設**，這是同一缺陷的第三種載體：「這趟旅費要用哪一個計畫的經費」預設了一定有經費，對方若想回「沒有」，這個問句沒有地方放。先問能不能，再問哪一個：「這次出差能不能申請補助？如果可以，請問用哪一個計畫的經費？」**判準：這個問句的答案，是不是已經把一個還沒獲准的前提當成給定？** |
 | **Adjacent structural dividers** | Two lines with only whitespace between (e.g., section-closing rule + next-section-opening rule, or heading-trailing rule right before `---`). This is the *actual* AI tell—not the total count of lines but the back-to-back pair. | Remove one side of the pair. Default to keeping the semantically stronger line (e.g., keep the wrapper; remove the heading-trailing decorative `::after` rule) |
 | `2px double` borders (in HTML/PDF drafts) | Double-line borders are AI design reflex for emphasis (e.g., total row, CTA divider) | Use `1px solid`. Emphasis comes from *weight difference* against neighboring soft rules, not from doubling the line itself |
 | Decorative `::before` / `::after` rules on every heading | AI adds trailing horizontal lines after `I SCOPE · 關於本工作坊`-style labels to "make it look editorial" | Remove. Small-caps labels with proper letter-spacing carry enough visual weight alone |
 | Arrow symbols (`→` / `$\rightarrow$`) in prose to show direction, change, or causality | Fine in slides or notes, but in formal prose the reader has to "sound it out", and the arrow is ambiguous (sequence? causality? numeric change? lead-lag direction?). A clear AI tell in academic/report writing. | Spell it out in words: "期貨領先現貨之方向", "由 0.81 上升至 0.89", "X 導致 Y". Keep arrows only inside math mode, equations, or actual diagrams. |
 | "新增" / "新加" / "另新增" framing in a one-piece document | In a finished document every part is integral. "第四章新增之…" / "本研究新增了…" exposes multi-pass assembly and reads as patched-together — the reader is not supposed to see the seams. | Drop the "新增" frame: "第四章新增之 X" → "第四章之 X" / "本研究之 X". State what the section *is*, not when it was bolted on. |
 | **外歸因推卸**（解釋遲交／失誤時把主因推給流程或別人：「因為 GBA 代碼還沒好」「因為某流程慢」「因為經費還沒確認」）| 即使屬實，外歸因讀起來像卸責、推給制度或他人，語用上顯得不負責——在道歉／說明遲交的信裡最傷信任。「找一個更有說服力的外部理由」不會讓它不像推，只會更像。 | 內歸因、承擔：主因寫成自己的責任（「我剛到職、首次辦理、對送件時程不熟、未能及早啟動」）；外部因素只當次要、輕帶過、不當擋箭牌；結尾收在自己身上（「這主要是我規劃上的不足，往後會提早準備」）。誠實 acknowledge 但不過度自貶。要不像「推」，是把責任接回自己，不是換一個外部理由。 |
+
+### 規則檔逐條對照（Phase 5 的一部分，有自己的 TaskCreate）
+
+anti-pattern 表之後、5a 之前，把 Phase 0b resolve 回傳的規則檔**逐條**對照草稿。**Compose 與 Revise 一律執行**，不適用 calibrate mode。規則檔在 Phase 0b 讀過，不等於寫完草稿後有人回頭對照：規則檔很長時，讀一次，只有當下記得的幾條會影響落筆。
+
+> **為什麼要有這一步**：2026-10-02 一封請示信，陳老師的規則檔早就寫了「請示用『是否可能』比『是否可以』軟」，起草時讀過，草稿仍寫成「是否可以」。上面的 anti-pattern 表是 core 通用的，查不到某位收件人專屬的條目；5c 的三軸 lens 也沒有「對照規則檔」這一軸。
+
+**讀者**：由起草的 agent 派一個**獨立 subagent**，同模型家族即可。**只給兩樣**：規則檔全文（resolve 回傳的所有檔案，照回傳順序），與要交付的草稿；重新對照與 Phase 6 修改輪時，另加一份改動處清單。**不給**：Phase 1–3 的聲音模型、使用者對這封信說過的話、起草過程。讀者只需要規則與草稿。
+
+讀者指示：
+
+```
+下面有一份「寫給某位收件人的規則檔」和一份要寄出的草稿。請把規則檔裡的條目逐一列出，每一條都要寫出判定，不可省略任何一條。
+
+「條目」指規則檔裡每一個以規則形式寫出的內容：表格裡的一列「避免／改用」、帶「判準」的段落、「不要／不得」句、紅線、事實固定點。一條規則包含多個要求時，按要求拆開，各算一條；同一內容符合多種形式時只算一次。
+
+每一條用一行：
+
+<條目的前 25 個字>｜命中／未命中／不適用
+
+判定為「命中」的，下一行縮排寫：草稿原句，以及依該條規則的建議改寫。草稿完全沒寫規則要求寫的內容時，草稿原句寫「草稿未包含」。
+
+最後一行寫總數：共 N 條，命中 X 條。
+```
+
+> **為什麼要每一條都寫出判定，而不是「找出違反的條目」**：2026-10-02 用同一份規則檔（22,597 字）與同一份原草稿實測。「找出違反的條目」只回 2 條，其中 1 條是誤報，**漏掉了促成這一步的「是否可以」**；改成「每一條都寫出判定」，189 條中命中 4 條，抓到了它。另外兩個命中是測試輸入沒帶署名檔造成的誤報，一個是真命中（提到外部會議要附官方連結）。召回靠強制逐條，不靠把指示問得更用力。代價是慢：同一個模型，自由格式不到 5 分鐘，逐條判定超過 5 分鐘。
+
+規則檔很長時，可以按章節分給多個 subagent 並行，每個都拿完整草稿與自己那一份規則；總數相加。回傳缺了最後一行總數，視為回傳不是上述格式。**起草的 agent 從規則檔隨手抽三個條目，檢查都在回傳裡**；任一缺漏，視為回傳不是上述格式，因為格式合格但漏列條目，看起來與完整回傳一樣。
+
+**採納**：讀者只判定，不改稿。起草的 agent 讀「命中」的條目，逐條決定改或不改。改了之後，重跑 Phase 5 的 anti-pattern 檢查，並**重新對照規則檔**：依某一條規則改稿，可能同時違反另一條，通用的 anti-pattern 表抓不到這種新違規。重新對照時，讀者拿到修改後的完整草稿與規則檔，**仍用同一個格式列出所有條目**，並被告知改動了哪幾處，把注意力放在那些改動與它們的連帶影響上；告知改動處不是縮小清單，縮小清單就回到漏掉條目的老問題。**不設輪次上限**，但每一輪都印出輪次與命中數；某一輪沒有新增任何修改，就收斂。**不改的條目，Phase 6 呈現時逐條列出**（規則、草稿原句、不改的理由），讓使用者可以推翻；命中 0 條時寫「規則檔對照：共 N 條，命中 0 條」。
+
+**降級**：派不出 subagent、執行失敗、逾時、回傳不是上述格式，四種情形都**不跳過本步**，改由起草的 agent 自己做：把規則檔裡的條目一條條列出來，每條寫「命中」「未命中」或「不適用」，結果放進 Phase 6。降級是少了獨立視角，不是少了這一步。**不重試、不詢問使用者。**
+
+**Phase 6 修改輪也執行**：做法同上，用同一個格式列出所有條目，讀者另被告知改動了哪幾處。給完整草稿，是因為有些規則看的是全文（重複、順序、前後一致），只給改動句就判斷不了。原因同 5e：修改時才加入的句子，否則不會經過任何一關。
+
+**非目標**：草稿是否符合規則檔寫下的「事實固定點」由本步檢查；規則檔沒寫的外部事實查證、語序、冗贅，由 5c、5e、5g 負責。本步不取代上面的 anti-pattern 表，也不適用於 calibrate mode，見下方 Calibrate-draft entry。
 
 ## Phase 5a: Natural-voice pass（引用 human-writing，不複製）
 
@@ -622,7 +659,9 @@ there is no human to interview mid-pass.
   (its flags need a human to adjudicate and the return shape has no place for them),
   *Smooth Pass* (its output is a candidate a human must choose to adopt, and the
   return shape has no place for a diff), *Redundancy Trim* (it works from the
-  Smooth Pass candidate, which does not exist here), *Present and Iterate*, *Learn from User Edits*, and *Persist for Next Time*.
+  Smooth Pass candidate, which does not exist here), *Subject-rules Audit* (its
+  objections need a human to adjudicate, and the return shape has no place for
+  them), *Present and Iterate*, *Learn from User Edits*, and *Persist for Next Time*.
 - ***Understand the Writer* is SKIPPED** — do not interview.
 - **Recipient context comes from `recipient-rules`, or from `recipient` when that
   field is absent.**

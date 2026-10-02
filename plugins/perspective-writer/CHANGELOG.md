@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.10.0] - 2026-10-02
+
+### Added
+- **規則檔逐條對照**（Phase 5 的一部分，有自己的 TaskCreate）。anti-pattern 表之後、5a 之前，派獨立 subagent，只給它 resolve 回傳的規則檔全文與草稿，找出草稿違反的條目；起草的 agent 逐條決定改或不改，不改的在 Phase 6 逐條列出讓使用者推翻。派不出 subagent 時不跳過，改由起草的 agent 把規則檔條目逐條列出命中／未命中／不適用。Phase 6 修改輪對改動句也執行。
+- Phase 0 bootstrap 的 TaskCreate 清單新增 `phase5_subject_rules_audit`。
+- 起因：2026-10-02 一封請示信，陳老師的規則檔早已寫「請示用『是否可能』比『是否可以』軟」，起草時讀過，草稿仍寫「是否可以」。規則檔在開頭讀一次，寫完沒有任何一步回頭對照。
+- 做法由實測決定：同一份規則檔與同一份原草稿，「找出違反的條目」漏掉了「是否可以」；改成「每一條都寫出命中／未命中／不適用」後抓到它（189 條命中 4 條，其中 2 條是測試輸入沒帶署名檔的誤報）。代價是慢，規則檔很長時可按章節分給多個 subagent 並行。
+
+### Changed
+- Phase 5 表的 *Presupposed approval* 列補第三種載體：問句。「這趟旅費要用哪一個計畫的經費」預設了一定有經費；先問能不能，再問哪一個。起因同一封信，使用者寄出版把它改成「能不能申請補助？如果可以，用哪一個計畫的經費？」。
+- EXTERNAL-CONSUMER CONTRACT 的 calibrate 不適用列舉加入 *Subject-rules Audit*（範圍說明，契約維持 v2）。
+
 ## [4.9.0] - 2026-10-02
 
 ### Added
