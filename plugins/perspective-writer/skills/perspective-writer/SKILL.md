@@ -142,6 +142,7 @@ TaskCreate(name="phase5a_natural_voice_pass",      description="Phase 5a: 讀本
 TaskCreate(name="phase5d_cross_model_polish",      description="Phase 5d: 跨模型潤稿 —— 走三層 ladder（外部模型 → 獨立 subagent → 照常交付），下達 frozen span 清單，回稿後逐條驗證（仍存在且出現次數不變），mismatch 即回退潤稿前草稿")
 TaskCreate(name="phase5e_native_syntax_read",      description="Phase 5e: 派同家族獨立 subagent 當語序讀者，只給文字＋語言標記＋起點清單（不給草稿、來源、聲音模型、收件人脈絡、使用者指示）；讀者只標記不改稿，採用的改寫須過 frozen span 驗證；派不出／失敗／逾時／格式不符即照常交付並附一行說明；Phase 6 修改輪只重讀改動句與前後各一句")
 TaskCreate(name="phase5f_smooth_pass",             description="Phase 5f: 順稿 —— 用一句簡單指令（你可以順一下這封信嗎？／Can you smooth out this letter?）請 5d 同一條管道順一遍，並一起給與這封信有關的全部資訊（五類，見 5f）；回稿只是候選，須同時通過 frozen span 驗證與 anti-pattern 檢查才算可採用，否則整份捨棄；可採用也先給使用者看差異，不直接改稿")
+TaskCreate(name="phase5g_redundancy_trim",         description="Phase 5g: 刪冗 —— 起草的 agent 對照 5f 回稿（不論可否採用，只當參考），只刪或併原稿裡重複說同一件事的敘述；不新增、不借新措辭；每處都指得出信裡另一處仍說了；刪併後重過 Phase 5 與 5a；5f 沒有回稿則不執行")
 TaskCreate(name="phase6_present_and_iterate",      description="Phase 6: 呈現草稿並解釋選擇，等 user 回饋；若編輯檔案 → delegate draft-learner (6b)")
 TaskCreate(name="phase7_persist_rules",            description="Phase 7: 徵詢後執行 persist 操作（見 references/rules-resolution.md 的 Named resolution contract）")
 ```
@@ -547,9 +548,9 @@ Phase 5 是你自己對草稿的檢查；Phase 5c 是多視角的**複核**，�
 1. 5d 的每個 frozen span 仍然存在且出現次數不變，段落數不變。
 2. 回稿通過 Phase 5 與 facet 增補列的 anti-pattern 檢查，且沒有新增、刪除或改變任何事實或請求，包括否定、條件與指涉。凍結字串都還在，不保證這一條成立。
 
-任一不成立，**整份捨棄**，沿用順稿前的草稿，不挑其中幾處拼回去：拼出來的句子沒有被任何一關驗過。
+任一不成立，**整份捨棄**，沿用順稿前的草稿，不挑其中幾處拼回去：拼出來的句子沒有被任何一關驗過。整份捨棄只是不採用它的文字，回稿仍交給 5g 當參考。
 
-兩個都成立時**也不直接改稿**。Phase 6 呈現順稿前的草稿，附上順稿版與逐行差異，使用者說採用才採用。差異為空時只附一行「順稿：無修改」。**使用者採用後視同一次 Phase 6 修改輪**：對改動的句子加前後各一句跑 5e，因為順稿版在採用前沒有被 5e 盲讀過。改動句以**採用後的文字**定位；合併或拆分的句子全部算改動句；整句刪除時，取刪除處前後各一句。採用後 5e 的改寫，依 5e 的採納規則處理。
+兩個都成立時**也不直接改稿**。Phase 6 呈現草稿（5g 動過的話，是 5g 之後的版本），附上順稿版，以及它與該草稿之間的逐行差異，使用者說採用才採用。差異為空時只附一行「順稿：無修改」。**使用者採用後視同一次 Phase 6 修改輪**：對改動的句子加前後各一句跑 5e，因為順稿版在採用前沒有被 5e 盲讀過。改動句以**採用後的文字**定位；合併或拆分的句子全部算改動句；整句刪除時，取刪除處前後各一句。採用後 5e 的改寫，依 5e 的採納規則處理。
 
 ### 降級
 
@@ -565,6 +566,32 @@ Phase 5 是你自己對草稿的檢查；Phase 5c 是多視角的**複核**，�
 
 - **不**把規則寫成指令：規則只作為資料附上，下達約束是 5d 的事
 - **不**取代 5d、5e：5d 在約束下改寫，5e 盲讀並標記，本步產生不帶限制的候選
+- **不**適用於 calibrate mode —— 見下方 Calibrate-draft entry
+
+## Phase 5g: Redundancy Trim（對照順稿刪冗）
+
+5f 之後、Phase 6 呈現之前，由**起草的 agent** 對照 5f 的回稿，把自己原稿裡重複說同一件事的敘述刪掉或併掉。**目的只有一個：減少冗贅。** Compose 與 Revise 一律執行，不適用 calibrate mode。
+
+5f 走完降級流程後仍沒有完整回稿，本步不執行，Phase 6 附一行「（刪冗未執行：順稿無回稿）」。5f 只要有任何一層回了完整的信，就有參考可用。
+
+**5f 回稿只當參考，不論可不可採用。** 順稿版常把重複的說法併成一句，那是線索；它也會新增措辭，那些不借用。動手的是起草的 agent，不是外部模型，所以改出來的只能是原稿已經有的話。
+
+可以動手的條件只有三個，**三個都要成立。這是封閉列舉，不得依性質相似類推第四個：**
+
+1. 只刪或併，不新增事實、請求或句子成分，也不借順稿版新增的詞。
+2. 每一處刪併，都指得出「功能相同的話在信裡另一處仍然說了」；指不出就不動。**重複的是標記句，不是請求本身**：功能相同的標記句，字詞不同也算重複，例如「想請老師指示」與「想向老師請示」；兩項不同的請求不算同一件事，併完之後每一項請求仍要各自明確存在。
+3. 動過之後仍通過 Phase 5（含 facet 增補列）與 5a；稱謂、署名與收尾格式不動，信裡要對方做的事也不動；5d 凍結清單裡屬於時間、金額、經手人、流程細節、逐字引用這五類事實的字串，仍須存在且次數不變；段落數不變。
+
+**結果就是 Phase 6 呈現的草稿**，並附上刪併前後的差異與每處的理由，理由要指出信中仍保留的對應處；使用者不同意就還原。動過的句子，加前後各一句，補跑 5e（定位方式同 5f 採用後那一段），因為併句與刪句會產生沒被 5e 盲讀過的文字。這一步不像 5f 要使用者先同意，是因為改的是起草者自己的話，而且只刪不加。
+
+Phase 6 修改輪不重跑本步，理由同 5f。
+
+> **為什麼需要這一步**：2026-10-02 一封請示信，開頭寫了「有兩件事想向老師請示」，兩項又各寫一次「想請老師指示」「想向老師請示」，同一個請示講了三次。5a 逐句問「讀者需不需要知道」時，每一句單看都有存在的理由，重複要把句子放在一起比才看得出來。對照順稿版後，兩項併成以問號收尾的問句，請示只在報數那句說一次。
+
+### 非目標
+
+- **不**檢查事實、語序或語氣：那是 Phase 5、5c、5e 的事
+- **不**取代 5a：5a 逐句看讀者需不需要，本步比的是句子之間有沒有重複
 - **不**適用於 calibrate mode —— 見下方 Calibrate-draft entry
 
 ## Calibrate-draft entry (EXTERNAL-CONSUMER CONTRACT, 2.11.0+, #1)
@@ -594,7 +621,8 @@ there is no human to interview mid-pass.
   stage task list), *Determine the Genre and Load Its Facet*, *Native-syntax Read*
   (its flags need a human to adjudicate and the return shape has no place for them),
   *Smooth Pass* (its output is a candidate a human must choose to adopt, and the
-  return shape has no place for a diff), *Present and Iterate*, *Learn from User Edits*, and *Persist for Next Time*.
+  return shape has no place for a diff), *Redundancy Trim* (it works from the
+  Smooth Pass candidate, which does not exist here), *Present and Iterate*, *Learn from User Edits*, and *Persist for Next Time*.
 - ***Understand the Writer* is SKIPPED** — do not interview.
 - **Recipient context comes from `recipient-rules`, or from `recipient` when that
   field is absent.**

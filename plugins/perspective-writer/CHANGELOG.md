@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.9.0] - 2026-10-02
+
+### Added
+- **Phase 5g: Redundancy Trim（對照順稿刪冗）**。5f 之後、Phase 6 呈現之前，起草的 agent 對照 5f 回稿（不論可否採用，只當參考），把原稿裡重複說同一件事的敘述刪掉或併掉，目的只有減少冗贅。動手條件三個，且都要成立：只刪併、不新增也不借順稿版的新措辭；每一處都指得出信裡另一處仍說了功能相同的話（重複的是標記句，不是不同項目的請求）；動過後仍通過 Phase 5（含 facet 增補列）與 5a，稱謂、署名、收尾格式、信裡要對方做的事、五類事實字串與段落數不動。結果就是 Phase 6 呈現的草稿，附前後差異與每處理由，使用者不同意就還原；動過的句子補跑 5e。5f 沒有回稿時不執行；Phase 6 修改輪不重跑。
+- Phase 0 bootstrap 的 TaskCreate 清單新增 `phase5g_redundancy_trim`。
+- 起因：2026-10-02 一封請示信，「有兩件事想向老師請示」之後兩項又各寫一次「想請老師指示」「想向老師請示」，同一個請示講了三次；5a 逐句看每句都站得住，重複要把句子放在一起比才看得出來。
+
+### Changed
+- 5f：整份捨棄仍把回稿交給 5g 當參考；Phase 6 的差異以 5g 之後的草稿為底。
+- EXTERNAL-CONSUMER CONTRACT 的 calibrate 不適用列舉加入 *Redundancy Trim*（範圍說明，契約維持 v2）。
+
 ## [4.8.0] - 2026-10-02
 
 ### Added
