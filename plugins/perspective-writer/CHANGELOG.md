@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.8.0] - 2026-10-02
+
+### Added
+- **Phase 5f: Smooth Pass（順稿）**。5e 之後、Phase 6 呈現之前，用一句簡單指令（「你可以順一下這封信嗎？」／"Can you smooth out this letter?"）請 5d 同一條管道把信順一遍，不附風格要求或凍結字串，但一起給與這封信有關的全部資訊，共五類：收件人與關係及規則檔全文、facet 的書信格律、信的目的與錨定事實、與收件人最近的往來原文、寫信者對這封信說過的話。回稿只是候選：5d 的 frozen span 全部仍在且次數不變、段落數不變，並且通過 anti-pattern 檢查、沒有新增、刪除或改變事實或請求，兩個條件都成立才算可採用，否則整份捨棄。可採用也先在 Phase 6 附差異給使用者看，使用者說採用才採用，採用後視同一次修改輪、對改動句跑 5e。指令在另開的新對話裡下達，不沿用 5d 的對話。降級同 5d 的 ladder，第二層也失敗才註記未執行，不阻斷交付；Phase 6 修改輪不重跑。
+- Phase 0 bootstrap 的 TaskCreate 清單新增 `phase5f_smooth_pass`。
+- 起因：2026-10-02 一封五句的請示信，只給信與一句指令時，回稿加了「一、二、」條列、把「我想」改成「我預計」（預設收件人同意）、改掉研討會全名的連字號與三層收尾，12 條凍結字串 7 條不符；附上五類資訊後這幾種改動都不再出現，仍有 6 條不符。資訊能減少最嚴重的改動，擋下問題的仍是驗證。
+
+### Changed
+- EXTERNAL-CONSUMER CONTRACT 的 calibrate 不適用列舉加入 *Smooth Pass*（範圍說明，契約維持 v2）：經由 calibrate 產生的草稿不經順稿。
+
 ## [4.7.0] - 2026-10-01
 
 ### Added

@@ -141,6 +141,7 @@ TaskCreate(name="phase5_antipatterns_check",       description="Phase 5: 過 cor
 TaskCreate(name="phase5a_natural_voice_pass",      description="Phase 5a: 讀本 skill references/natural-writing-checklist.md，逐條確認五項：簡單動詞／句長跟思路且允許重複／轉折詞只在需要時／無為像人而造的錯字軼事／收尾不重述不加對提問者的話。任一項不成立就改，改完才 completed")
 TaskCreate(name="phase5d_cross_model_polish",      description="Phase 5d: 跨模型潤稿 —— 走三層 ladder（外部模型 → 獨立 subagent → 照常交付），下達 frozen span 清單，回稿後逐條驗證（仍存在且出現次數不變），mismatch 即回退潤稿前草稿")
 TaskCreate(name="phase5e_native_syntax_read",      description="Phase 5e: 派同家族獨立 subagent 當語序讀者，只給文字＋語言標記＋起點清單（不給草稿、來源、聲音模型、收件人脈絡、使用者指示）；讀者只標記不改稿，採用的改寫須過 frozen span 驗證；派不出／失敗／逾時／格式不符即照常交付並附一行說明；Phase 6 修改輪只重讀改動句與前後各一句")
+TaskCreate(name="phase5f_smooth_pass",             description="Phase 5f: 順稿 —— 用一句簡單指令（你可以順一下這封信嗎？／Can you smooth out this letter?）請 5d 同一條管道順一遍，並一起給與這封信有關的全部資訊（五類，見 5f）；回稿只是候選，須同時通過 frozen span 驗證與 anti-pattern 檢查才算可採用，否則整份捨棄；可採用也先給使用者看差異，不直接改稿")
 TaskCreate(name="phase6_present_and_iterate",      description="Phase 6: 呈現草稿並解釋選擇，等 user 回饋；若編輯檔案 → delegate draft-learner (6b)")
 TaskCreate(name="phase7_persist_rules",            description="Phase 7: 徵詢後執行 persist 操作（見 references/rules-resolution.md 的 Named resolution contract）")
 ```
@@ -517,6 +518,55 @@ Phase 5 是你自己對草稿的檢查；Phase 5c 是多視角的**複核**，�
 - **不**檢查用字、語氣、事實，那些由 Phase 5、5a、5c、5d 負責
 - **不**處理術語中英混用（#18）
 
+## Phase 5f: Smooth Pass（順稿）
+
+5e 之後、Phase 6 呈現之前，用**一句簡單的指令**請 5d 同一條管道把信順一遍。**Compose 與 Revise 一律執行**，不適用 calibrate mode。5d 的指令帶著風格限制與凍結清單，改得保守；本步的指令不帶限制，但讀者拿到與這封信有關的全部資訊，由它自己判斷怎麼順，再由驗證決定能不能用。
+
+指令只有這一句，**不附風格要求，不附凍結字串**：
+
+- 繁體中文：`你可以順一下這封信嗎？`
+- English: `Can you smooth out this letter?`
+- 其他語言：用該語言說同一句。
+
+**指令之外，一起給與這封信有關的全部資訊**，也就是 Phase 1–4 起草時用過的材料。**共五類，這是封閉列舉：**
+
+1. 收件人與寫信者的關係，以及 Phase 0b resolve 回傳的規則檔全文
+2. Phase 0a 載入的 facet 的書信格律
+3. 這封信的目的，以及 Phase 1–3 錨定的事實與刻意不寫的事
+4. 與收件人最近的往來原文
+5. 寫信者對這封信說過的話，逐字
+
+規則只作為**資料**附上，不寫成指令；讀者自己判斷哪些規則與這封信有關。
+
+管道、三層 ladder、第二層必須是獨立 subagent、治理值於執行時解析，全部同 5d；本檔不寫任何模型名稱字面。**另開新對話，不沿用 5d 的對話內容，只給上面五類資訊、那一句指令與待順稿的信。** 沿用 5d 的對話，5d 的風格限制與凍結清單還在上下文裡，那就成了 5d 的第二輪。
+
+### 回稿只是候選
+
+**回稿不直接採用。** 可採用的條件只有兩個，兩個都要成立。**這是封閉列舉，不得依性質相似類推第三個：**
+
+1. 5d 的每個 frozen span 仍然存在且出現次數不變，段落數不變。
+2. 回稿通過 Phase 5 與 facet 增補列的 anti-pattern 檢查，且沒有新增、刪除或改變任何事實或請求，包括否定、條件與指涉。凍結字串都還在，不保證這一條成立。
+
+任一不成立，**整份捨棄**，沿用順稿前的草稿，不挑其中幾處拼回去：拼出來的句子沒有被任何一關驗過。
+
+兩個都成立時**也不直接改稿**。Phase 6 呈現順稿前的草稿，附上順稿版與逐行差異，使用者說採用才採用。差異為空時只附一行「順稿：無修改」。**使用者採用後視同一次 Phase 6 修改輪**：對改動的句子加前後各一句跑 5e，因為順稿版在採用前沒有被 5e 盲讀過。改動句以**採用後的文字**定位；合併或拆分的句子全部算改動句；整句刪除時，取刪除處前後各一句。採用後 5e 的改寫，依 5e 的採納規則處理。
+
+### 降級
+
+任一層失敗就降下一層，同 5d。**第二層也失敗**（派不出 subagent、執行失敗、逾時，或回傳不是一封完整的信）才算本步未執行，照常交付，並在 Phase 6 附一行「（順稿未執行：<原因>）」。**不重試、不詢問使用者、永不阻斷交付**（降級鐵律同 5c、5d、5e）。
+
+### Phase 6 修改輪不重跑本步
+
+使用者剛改過的句子是他自己的決定，順稿不該蓋掉它。
+
+> **為什麼附了資訊還是只能產生候選**：2026-10-02 一封五句的請示信，做了兩次對照。只給信與那一句指令，回稿加了「一、二、」條列、把「我想前一天住」改成「我預計前往住宿」（預設收件人同意）、把「列入旅費」改成「報支」、把研討會全名的「-」換成全形「－」、改掉三層收尾的第一層，12 條凍結字串有 7 條不符。再附上五類資訊重跑，這五種改動都沒有再出現，但仍把「想向老師請示」換成「想請問老師」、把「用」換成「應由…支應」、把第一句改成「依老師昨天的安排，我將…」，6 條凍結字串不符。資訊減少了最嚴重的改動，不能取代上面兩個條件。
+
+### 非目標
+
+- **不**把規則寫成指令：規則只作為資料附上，下達約束是 5d 的事
+- **不**取代 5d、5e：5d 在約束下改寫，5e 盲讀並標記，本步產生不帶限制的候選
+- **不**適用於 calibrate mode —— 見下方 Calibrate-draft entry
+
 ## Calibrate-draft entry (EXTERNAL-CONSUMER CONTRACT, 2.11.0+, #1)
 
 When the invocation args contain a `CALIBRATE-DRAFT REQUEST v1` block, you were
@@ -543,7 +593,8 @@ there is no human to interview mid-pass.
   survive reordering): *Bootstrap Stage Task List* (single programmatic pass — no
   stage task list), *Determine the Genre and Load Its Facet*, *Native-syntax Read*
   (its flags need a human to adjudicate and the return shape has no place for them),
-  *Present and Iterate*, *Learn from User Edits*, and *Persist for Next Time*.
+  *Smooth Pass* (its output is a candidate a human must choose to adopt, and the
+  return shape has no place for a diff), *Present and Iterate*, *Learn from User Edits*, and *Persist for Next Time*.
 - ***Understand the Writer* is SKIPPED** — do not interview.
 - **Recipient context comes from `recipient-rules`, or from `recipient` when that
   field is absent.**
